@@ -221,7 +221,7 @@ namespace IsoGen
         /// Represents an isosceles triangle where at least two sides are equal.
         /// </summary>
         public class IsoscelesTriangle : Triangle
-        {y
+        {
             private static bool IsIsosceles(List<Point3D> vertices) =>
                 IsIsosceles(VertsToEdges(vertices));
 
