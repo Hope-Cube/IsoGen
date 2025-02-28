@@ -1,18 +1,71 @@
-﻿using static IsoGen.Triangle;
-
-namespace IsoGen
+﻿namespace IsoGen
 {
     internal class Program
     {
         static void Main()
         {
-            Face face = new(new List<Point3D>() { new(0,0,0), new(0,1,0), new(0,1,1) });
+            // Példa: Derékszögű háromszög létrehozása három pontból.
+            var A = new Point3D(0, 0, 0);
+            var B = new Point3D(3, 0, 0);
+            var C = new Point3D(0, 4, 0);
 
-            Triangle triangle = new(new List<Point3D>() { new(0, 0, 0), new(0, 1, 0), new(0, 1, 1) });
+            try
+            {
+                var rightTriangle = new Triangle.RightTriangle([A, B, C]);
+                Console.WriteLine("Derékszögű háromszög csúcsai:");
+                foreach (var vertex in rightTriangle.Vertices)
+                {
+                    Console.WriteLine(vertex);
+                }
 
-            EquilateralTriangle equilateralTriangle = new(new List<Point3D>() { new(0, 0, 0), new(0, 1, 0), new(0, 1, 1) });
+                // Téglalap létrehozása a fenti derékszögű háromszögből:
+                var rectangle = new Rectangle(rightTriangle);
+                Console.WriteLine("\nTéglalap csúcsai:");
+                foreach (var vertex in rectangle.Vertices)
+                {
+                    Console.WriteLine(vertex);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Hiba a derékszögű háromszög vagy téglalap létrehozásakor: {ex.Message}");
+            }
 
-            IsoscelesTriangle isoscelesTriangle = new(new List<Point3D>() { new(0, 0, 0), new(0, 1, 0), new(0, 1, 1) });
+            // Példa: Négyzet létrehozása egy olyan derékszögű háromszögből,
+            // amely egy négyzet felét adja (például oldallengede 5 egység).
+            var P = new Point3D(0, 0, 0);
+            var Q = new Point3D(5, 0, 0);
+            var R = new Point3D(0, 5, 0);
+
+            try
+            {
+                var rightTriangleForSquare = new Triangle.RightTriangle([P, Q, R]);
+                var square = new Square(rightTriangleForSquare);
+                Console.WriteLine("\nNégyzet csúcsai:");
+                foreach (var vertex in square.Vertices)
+                {
+                    Console.WriteLine(vertex);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Hiba a négyzet létrehozásakor: {ex.Message}");
+            }
+
+            // Példa: Vektor műveletek demonstrálása.
+            var v1 = new Vector3D(1, 2, 3);
+            var v2 = new Vector3D(4, 5, 6);
+            Console.WriteLine("\nVektor műveletek:");
+            Console.WriteLine($"v1: {v1}");
+            Console.WriteLine($"v2: {v2}");
+            Console.WriteLine($"v1 + v2: {v1 + v2}");
+            Console.WriteLine($"v1 - v2: {v1 - v2}");
+            Console.WriteLine($"v1 * 2: {v1 * 2}");
+            Console.WriteLine($"v1 dot v2: {Vector3D.DotProduct(v1, v2)}");
+            Console.WriteLine($"v1 cross v2: {Vector3D.CrossProduct(v1, v2)}");
+
+            Console.WriteLine("\nNyomj meg egy billentyűt a kilépéshez...");
+            Console.ReadKey();
 
             //    // Save the drawn image to a file
             //    string filePath = "3DIsometricSpace.png";
