@@ -2,118 +2,258 @@
 
 namespace IsoGen
 {
-    // Using a record for immutability and built-in equality.
+    /// <summary>
+    /// Represents a 3D point.
+    /// </summary>
     public record Point3D(double X, double Y, double Z)
     {
         public override string ToString() => $"Point3D: {X}, {Y}, {Z}";
     }
 
-    // Static helper class for vector operations.
-    public static class Vector3D
+    /// <summary>
+    /// Represents a 3D vector with common vector operations.
+    /// </summary>
+    public record Vector3D(double X, double Y, double Z)
     {
-        public static Point3D Subtract(Point3D a, Point3D b) =>
-            new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        public override string ToString() => $"Vector3D: [{X}, {Y}, {Z}]";
 
-        public static Point3D Cross(Point3D a, Point3D b) =>
-            new(a.Y * b.Z - a.Z * b.Y,
-                        a.Z * b.X - a.X * b.Z,
-                        a.X * b.Y - a.Y * b.X);
+        /// <summary>
+        /// Returns the magnitude (length) of the vector.
+        /// </summary>
+        public double Magnitude => Math.Sqrt(X * X + Y * Y + Z * Z);
 
-        public static double Dot(Point3D a, Point3D b) =>
+        /// <summary>
+        /// Returns the normalized vector (unit vector).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when trying to normalize a zero vector.</exception>
+        public Vector3D Normalize()
+        {
+            double mag = Magnitude;
+            if (mag == 0)
+                throw new InvalidOperationException("Cannot normalize the zero vector.");
+            return new Vector3D(X / mag, Y / mag, Z / mag);
+        }
+
+        /// <summary>
+        /// Returns the cross product of two vectors.
+        /// </summary>
+        public static Vector3D CrossProduct(Vector3D a, Vector3D b) =>
+            new(
+                a.Y * b.Z - a.Z * b.Y,
+                a.Z * b.X - a.X * b.Z,
+                a.X * b.Y - a.Y * b.X
+            );
+
+        /// <summary>
+        /// Returns the dot product of two vectors.
+        /// </summary>
+        public static double DotProduct(Vector3D a, Vector3D b) =>
             a.X * b.X + a.Y * b.Y + a.Z * b.Z;
 
-        public static double Magnitude(Point3D a) =>
-            Math.Sqrt(a.X * a.X + a.Y * a.Y + a.Z * a.Z);
+        /// <summary>
+        /// Adds two vectors.
+        /// </summary>
+        public static Vector3D operator +(Vector3D a, Vector3D b) =>
+            new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
-        public static bool AreEqual(double a, double b, double tolerance = 1e-10) =>
-            Math.Abs(a - b) < tolerance;
+        /// <summary>
+        /// Subtracts one vector from another.
+        /// </summary>
+        public static Vector3D operator -(Vector3D a, Vector3D b) =>
+            new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+
+        /// <summary>
+        /// Returns the negation of a vector.
+        /// </summary>
+        public static Vector3D operator -(Vector3D a) =>
+            new(-a.X, -a.Y, -a.Z);
+
+        /// <summary>
+        /// Multiplies a vector by a scalar.
+        /// </summary>
+        public static Vector3D operator *(Vector3D a, double scalar) =>
+            new(a.X * scalar, a.Y * scalar, a.Z * scalar);
+
+        public static Vector3D operator *(double scalar, Vector3D a) =>
+            new(a.X * scalar, a.Y * scalar, a.Z * scalar);
+
+        /// <summary>
+        /// Divides a vector by a scalar.
+        /// </summary>
+        /// <exception cref="DivideByZeroException">Thrown when dividing by zero.</exception>
+        public static Vector3D operator /(Vector3D a, double scalar)
+        {
+            if (scalar == 0)
+                throw new DivideByZeroException("Dividing by zero is undefined.");
+            return new Vector3D(a.X / scalar, a.Y / scalar, a.Z / scalar);
+        }
+
+        /// <summary>
+        /// Compares two objects for approximate equality if they are doubles, using a given tolerance.
+        /// </summary>
+        public static bool ApproximatelyEquals(object obj0, object obj1, double tolerance = 1e-10)
+        {
+            if (obj0 == null || obj1 == null)
+                return false;
+            if (obj0.GetType() != obj1.GetType())
+                return false;
+            if (obj0 is double d0 && obj1 is double d1)
+                return Math.Abs(d0 - d1) < tolerance;
+            return obj0.Equals(obj1);
+        }
     }
 
-    // Represents an edge connecting two 3D points.
-    public class Edge(Point3D startPoint, Point3D endPoint)
+    /// <summary>
+    /// Represents an edge connecting two 3D points.
+    /// </summary>
+    public record Edge(Point3D StartPoint, Point3D EndPoint)
     {
-        public Point3D StartPoint { get; } = startPoint;
-        public Point3D EndPoint { get; } = endPoint;
-
+        /// <summary>
+        /// Returns the length of the edge.
+        /// </summary>
         public double Length() =>
-            Vector3D.Magnitude(Vector3D.Subtract(EndPoint, StartPoint));
+            Math.Sqrt(Math.Pow(EndPoint.X - StartPoint.X, 2) +
+                      Math.Pow(EndPoint.Y - StartPoint.Y, 2) +
+                      Math.Pow(EndPoint.Z - StartPoint.Z, 2));
 
         public override string ToString() =>
             $"Edge: {StartPoint}; {EndPoint}";
     }
 
-    // Base class for polygonal faces.
-    public class Face
+    /// <summary>
+    /// Contains geometric constants.
+    /// </summary>
+    public static class GeometryConstants
+    {
+        public const double DefaultTolerance = 1e-10;
+    }
+
+    /// <summary>
+    /// Provides extension methods for Point3D.
+    /// </summary>
+    public static class Point3DExtensions
+    {
+        /// <summary>
+        /// Subtracts one point from another, returning the vector difference.
+        /// </summary>
+        public static Point3D Subtract(this Point3D a, Point3D b) =>
+            new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+
+        /// <summary>
+        /// Returns the Euclidean distance between two points.
+        /// </summary>
+        public static double DistanceTo(this Point3D a, Point3D b)
+        {
+            double dx = b.X - a.X, dy = b.Y - a.Y, dz = b.Z - a.Z;
+            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
+    }
+
+    /// <summary>
+    /// Represents a polygonal face in 3D space.
+    /// </summary>
+    public record Face
     {
         public List<Point3D> Vertices { get; }
         public List<Edge> Edges { get; }
 
+        /// <summary>
+        /// Creates a face from a list of vertices.
+        /// </summary>
         public Face(List<Point3D> vertices)
         {
             Vertices = vertices;
             Edges = VertsToEdges(vertices);
         }
 
+        /// <summary>
+        /// Creates a face from a list of edges.
+        /// </summary>
         public Face(List<Edge> edges)
         {
             Edges = edges;
             Vertices = EdgesToVerts(edges);
         }
 
-        // Converts vertices to a cyclic list of edges.
+        /// <summary>
+        /// Converts a list of vertices to a cyclic list of edges.
+        /// </summary>
         public static List<Edge> VertsToEdges(List<Point3D> vertices) =>
             [.. vertices.Select((p, i) => new Edge(p, vertices[(i + 1) % vertices.Count]))];
 
-        // Extracts distinct vertices from edges.
+        /// <summary>
+        /// Extracts distinct vertices from a list of edges.
+        /// </summary>
         public static List<Point3D> EdgesToVerts(List<Edge> edges) =>
             [.. edges.SelectMany(e => new[] { e.StartPoint, e.EndPoint }).Distinct()];
 
-        // Checks if all vertices lie in the same plane.
-        public bool IsPlanar(double tolerance = 1e-10)
+        /// <summary>
+        /// Determines if all vertices lie in the same plane.
+        /// </summary>
+        public bool IsPlanar(double tolerance = GeometryConstants.DefaultTolerance)
         {
             if (Vertices.Count < 3)
                 return true;
 
-            // Identify two distinct points.
             Point3D p0 = Vertices[0];
-            Point3D p1 = Vertices.Skip(1)
-                                 .FirstOrDefault(p => Vector3D.Magnitude(Vector3D.Subtract(p, p0)) > tolerance)
-                                 ?? throw new Exception("Unable to find a distinct point for p1.");
-            if (p1 == null) return true;
+            Point3D p1 = Vertices[1];
+            Vector3D initialVector = new(p1.X - p0.X, p1.Y - p0.Y, p1.Z - p0.Z);
+            int index = 2;
+            Vector3D? normal = null;
 
-            // Identify a third point that is not collinear with p0 and p1.
-            Point3D p2 = Vertices.FirstOrDefault(p => p != p0 && p != p1 &&
-                                Vector3D.Magnitude(Vector3D.Cross(Vector3D.Subtract(p1, p0), Vector3D.Subtract(p, p0))) > tolerance)
-                                ?? throw new Exception("Unable to find a distinct point for p2.");
-            if (p2 == null) return true;
+            for (; index < Vertices.Count; index++)
+            {
+                Point3D p2 = Vertices[index];
+                Vector3D vec = new(p2.X - p0.X, p2.Y - p0.Y, p2.Z - p0.Z);
+                normal = Vector3D.CrossProduct(initialVector, vec);
+                if (normal.Magnitude > tolerance)
+                    break;
+            }
 
-            // Compute the normal of the plane.
-            var normal = Vector3D.Cross(Vector3D.Subtract(p1, p0), Vector3D.Subtract(p2, p0));
+            if (normal == null || normal.Magnitude <= tolerance)
+                return true;
 
-            // Check that each vertex lies in the plane.
-            return Vertices.All(p => Math.Abs(Vector3D.Dot(Vector3D.Subtract(p, p0), normal)) < tolerance);
+            normal = normal.Normalize();
+
+            foreach (var vertex in Vertices)
+            {
+                Vector3D diff = new(vertex.X - p0.X, vertex.Y - p0.Y, vertex.Z - p0.Z);
+                double distance = Math.Abs(Vector3D.DotProduct(normal, diff));
+                if (distance > tolerance)
+                    return false;
+            }
+
+            return true;
         }
     }
 
-    // Represents a triangle with exactly 3 vertices.
-    public class Triangle : Face
+    /// <summary>
+    /// Represents a triangle with exactly 3 vertices.
+    /// </summary>
+    public record Triangle : Face
     {
-        public Triangle(List<Point3D> vertices, double tolerance = 1e-10)
+        /// <summary>
+        /// Constructs a triangle from vertices.
+        /// </summary>
+        public Triangle(List<Point3D> vertices, double tolerance = GeometryConstants.DefaultTolerance)
             : base(vertices)
         {
             if (Vertices.Count != 3)
-                throw new Exception("A triangle must have exactly 3 vertices.");
+                throw new ArgumentException("A triangle must have exactly 3 vertices.");
             if (!IsTriangle(Edges, tolerance))
-                throw new Exception("The provided vertices do not form a valid triangle.");
+                throw new ArgumentException("The provided vertices do not form a valid triangle.");
         }
 
-        public Triangle(List<Edge> edges, double tolerance = 1e-10)
+        /// <summary>
+        /// Constructs a triangle from edges.
+        /// </summary>
+        public Triangle(List<Edge> edges, double tolerance = GeometryConstants.DefaultTolerance)
             : base(edges)
         {
             if (Vertices.Count != 3)
-                throw new Exception("A triangle must have exactly 3 vertices.");
+                throw new ArgumentException("A triangle must have exactly 3 vertices.");
             if (!IsTriangle(Edges, tolerance))
-                throw new Exception("The provided edges do not form a valid triangle.");
+                throw new ArgumentException("The provided edges do not form a valid triangle.");
         }
 
         private static bool IsTriangle(List<Edge> edges, double tolerance)
@@ -130,21 +270,23 @@ namespace IsoGen
                    (l2 + l0 > l1 + tolerance);
         }
 
-        // Represents an equilateral triangle.
-        public class EquilateralTriangle : Triangle
+        /// <summary>
+        /// Represents an equilateral triangle.
+        /// </summary>
+        public record EquilateralTriangle : Triangle
         {
-            public EquilateralTriangle(List<Point3D> vertices, double tolerance = 1e-10)
+            public EquilateralTriangle(List<Point3D> vertices, double tolerance = GeometryConstants.DefaultTolerance)
                 : base(vertices, tolerance)
             {
                 if (!IsEquilateral(VertsToEdges(vertices), tolerance))
-                    throw new Exception("The provided vertices do not form an equilateral triangle.");
+                    throw new ArgumentException("The provided vertices do not form an equilateral triangle.");
             }
 
-            public EquilateralTriangle(List<Edge> edges, double tolerance = 1e-10)
+            public EquilateralTriangle(List<Edge> edges, double tolerance = GeometryConstants.DefaultTolerance)
                 : base(edges, tolerance)
             {
                 if (!IsEquilateral(edges, tolerance))
-                    throw new Exception("The provided edges do not form an equilateral triangle.");
+                    throw new ArgumentException("The provided edges do not form an equilateral triangle.");
             }
 
             private static bool IsEquilateral(List<Edge> edges, double tolerance)
@@ -152,26 +294,28 @@ namespace IsoGen
                 double l0 = edges[0].Length();
                 double l1 = edges[1].Length();
                 double l2 = edges[2].Length();
-                return Vector3D.AreEqual(l0, l1, tolerance) &&
-                       Vector3D.AreEqual(l1, l2, tolerance);
+                return Vector3D.ApproximatelyEquals(l0, l1, tolerance) &&
+                       Vector3D.ApproximatelyEquals(l1, l2, tolerance);
             }
         }
 
-        // Represents an isosceles triangle.
-        public class IsoscelesTriangle : Triangle
+        /// <summary>
+        /// Represents an isosceles triangle.
+        /// </summary>
+        public record IsoscelesTriangle : Triangle
         {
-            public IsoscelesTriangle(List<Point3D> vertices, double tolerance = 1e-10)
+            public IsoscelesTriangle(List<Point3D> vertices, double tolerance = GeometryConstants.DefaultTolerance)
                 : base(vertices, tolerance)
             {
                 if (!IsIsosceles(VertsToEdges(vertices), tolerance))
-                    throw new Exception("The provided vertices do not form an isosceles triangle.");
+                    throw new ArgumentException("The provided vertices do not form an isosceles triangle.");
             }
 
-            public IsoscelesTriangle(List<Edge> edges, double tolerance = 1e-10)
+            public IsoscelesTriangle(List<Edge> edges, double tolerance = GeometryConstants.DefaultTolerance)
                 : base(edges, tolerance)
             {
                 if (!IsIsosceles(edges, tolerance))
-                    throw new Exception("The provided edges do not form an isosceles triangle.");
+                    throw new ArgumentException("The provided edges do not form an isosceles triangle.");
             }
 
             private static bool IsIsosceles(List<Edge> edges, double tolerance)
@@ -179,27 +323,29 @@ namespace IsoGen
                 double l0 = edges[0].Length();
                 double l1 = edges[1].Length();
                 double l2 = edges[2].Length();
-                return Vector3D.AreEqual(l0, l1, tolerance) ||
-                       Vector3D.AreEqual(l1, l2, tolerance) ||
-                       Vector3D.AreEqual(l2, l0, tolerance);
+                return Vector3D.ApproximatelyEquals(l0, l1, tolerance) ||
+                       Vector3D.ApproximatelyEquals(l1, l2, tolerance) ||
+                       Vector3D.ApproximatelyEquals(l2, l0, tolerance);
             }
         }
 
-        // Represents a right triangle that satisfies the Pythagorean theorem.
-        public class RightTriangle : Triangle
+        /// <summary>
+        /// Represents a right triangle that satisfies the Pythagorean theorem.
+        /// </summary>
+        public record RightTriangle : Triangle
         {
-            public RightTriangle(List<Point3D> vertices, double tolerance = 1e-10)
+            public RightTriangle(List<Point3D> vertices, double tolerance = GeometryConstants.DefaultTolerance)
                 : base(vertices, tolerance)
             {
                 if (!IsRight(VertsToEdges(vertices), tolerance))
-                    throw new Exception("The provided vertices do not form a right triangle.");
+                    throw new ArgumentException("The provided vertices do not form a right triangle.");
             }
 
-            public RightTriangle(List<Edge> edges, double tolerance = 1e-10)
+            public RightTriangle(List<Edge> edges, double tolerance = GeometryConstants.DefaultTolerance)
                 : base(edges, tolerance)
             {
                 if (!IsRight(edges, tolerance))
-                    throw new Exception("The provided edges do not form a right triangle.");
+                    throw new ArgumentException("The provided edges do not form a right triangle.");
             }
 
             private static bool IsRight(List<Edge> edges, double tolerance)
@@ -217,9 +363,8 @@ namespace IsoGen
 
     /// <summary>
     /// Represents a quadrilateral constructed from two triangles.
-    /// Validates that the combined vertices form exactly 4 distinct points.
     /// </summary>
-    public class Quadrilateral : Face
+    public record Quadrilateral : Face
     {
         public Triangle Triangle1 { get; }
         public Triangle Triangle2 { get; }
@@ -228,7 +373,7 @@ namespace IsoGen
             : base(CombineVertices(triangle1, triangle2))
         {
             if (Vertices.Count != 4)
-                throw new Exception("The provided triangles do not form a valid quadrilateral (must have 4 distinct vertices).");
+                throw new ArgumentException("The provided triangles do not form a valid quadrilateral (must have 4 distinct vertices).");
             Triangle1 = triangle1;
             Triangle2 = triangle2;
         }
@@ -244,26 +389,74 @@ namespace IsoGen
     }
 
     /// <summary>
-    /// Represents a rectangle (a quadrilateral with right angles) constructed from two right triangles.
-    /// Validates that all interior angles are approximately 90°.
+    /// Represents a rectangle constructed from a single right triangle by reflecting it across the hypotenuse midpoint.
     /// </summary>
-    public class Rectangle : Quadrilateral
+    public record Rectangle : Quadrilateral
     {
         public RightTriangle RightTriangle1 { get; }
         public RightTriangle RightTriangle2 { get; }
 
-        public Rectangle(RightTriangle rightTriangle1, RightTriangle rightTriangle2)
-            : base(rightTriangle1, rightTriangle2)
+        /// <summary>
+        /// Constructs a rectangle from a single right triangle.
+        /// The second triangle is obtained by rotating (reflecting) the original triangle 180° about the midpoint of its hypotenuse.
+        /// </summary>
+        public Rectangle(RightTriangle rightTriangle)
+            : base(rightTriangle, CreateReflectedTriangle(rightTriangle, GeometryConstants.DefaultTolerance))
         {
+            RightTriangle1 = rightTriangle;
+            RightTriangle2 = CreateReflectedTriangle(rightTriangle, GeometryConstants.DefaultTolerance);
             if (!IsRectangle(Vertices))
-                throw new Exception("The provided right triangles do not form a valid rectangle.");
-            RightTriangle1 = rightTriangle1;
-            RightTriangle2 = rightTriangle2;
+                throw new ArgumentException("The provided right triangle does not form a valid rectangle after reflection.");
+        }
+
+        /// <summary>
+        /// Creates a reflected right triangle by rotating the original triangle 180° about the midpoint of its hypotenuse.
+        /// </summary>
+        private static RightTriangle CreateReflectedTriangle(RightTriangle triangle, double tolerance)
+        {
+            var vertices = triangle.Vertices;
+            if (vertices.Count != 3)
+                throw new ArgumentException("A right triangle must have exactly 3 vertices.");
+
+            Point3D? rightAngleVertex = null;
+            Point3D? hypA = null, hypB = null;
+
+            // Identify the right angle vertex and the hypotenuse endpoints.
+            for (int i = 0; i < 3; i++)
+            {
+                Point3D current = vertices[i];
+                Point3D next = vertices[(i + 1) % 3];
+                Point3D nextNext = vertices[(i + 2) % 3];
+                // Vectors from the current vertex to the other two.
+                Vector3D vec1 = new(next.X - current.X, next.Y - current.Y, next.Z - current.Z);
+                Vector3D vec2 = new(nextNext.X - current.X, nextNext.Y - current.Y, nextNext.Z - current.Z);
+                double dot = Vector3D.DotProduct(vec1, vec2);
+                if (Math.Abs(dot) < tolerance)
+                {
+                    rightAngleVertex = current;
+                    hypA = next;
+                    hypB = nextNext;
+                    break;
+                }
+            }
+
+            if (rightAngleVertex == null || hypA == null || hypB == null)
+                throw new ArgumentException("No right angle found in the provided triangle.");
+
+            // Compute the midpoint of the hypotenuse.
+            var mid = new Point3D((hypA.X + hypB.X) / 2, (hypA.Y + hypB.Y) / 2, (hypA.Z + hypB.Z) / 2);
+            // Reflect the right angle vertex over the midpoint.
+            var reflectedVertex = new Point3D(2 * mid.X - rightAngleVertex.X, 2 * mid.Y - rightAngleVertex.Y, 2 * mid.Z - rightAngleVertex.Z);
+
+            // Construct the new triangle: the hypotenuse endpoints remain, and the new vertex is the reflection.
+            var newVertices = new List<Point3D> { hypA, reflectedVertex, hypB };
+
+            return new RightTriangle(newVertices, tolerance);
         }
 
         private static bool IsRectangle(List<Point3D> vertices)
         {
-            const double tolerance = 1e-10;
+            const double tolerance = GeometryConstants.DefaultTolerance;
             if (vertices.Count != 4)
                 return false;
             // Assumes vertices are in cyclic order.
@@ -272,38 +465,31 @@ namespace IsoGen
                 Point3D prev = vertices[(i + 3) % 4];
                 Point3D current = vertices[i];
                 Point3D next = vertices[(i + 1) % 4];
-                Point3D v1 = Subtract(current, prev);
-                Point3D v2 = Subtract(next, current);
-                double dot = Dot(v1, v2);
+                Vector3D v1 = new(current.X - prev.X, current.Y - prev.Y, current.Z - prev.Z);
+                Vector3D v2 = new(next.X - current.X, next.Y - current.Y, next.Z - current.Z);
+                double dot = Vector3D.DotProduct(v1, v2);
                 if (Math.Abs(dot) > tolerance)
                     return false;
             }
             return true;
         }
-
-        private static Point3D Subtract(Point3D a, Point3D b) =>
-            new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
-
-        private static double Dot(Point3D a, Point3D b) =>
-            a.X * b.X + a.Y * b.Y + a.Z * b.Z;
     }
 
     /// <summary>
     /// Represents a square, a rectangle with four equal side lengths.
-    /// Validates that all sides are approximately equal.
     /// </summary>
-    public class Square : Rectangle
+    public record Square : Rectangle
     {
-        public Square(RightTriangle rightTriangle1, RightTriangle rightTriangle2)
-            : base(rightTriangle1, rightTriangle2)
+        public Square(RightTriangle rightTriangle)
+            : base(rightTriangle)
         {
             if (!IsSquare(Vertices))
-                throw new Exception("The rectangle is not a square.");
+                throw new ArgumentException("The rectangle is not a square.");
         }
 
         private static bool IsSquare(List<Point3D> vertices)
         {
-            const double tolerance = 1e-10;
+            const double tolerance = GeometryConstants.DefaultTolerance;
             if (vertices.Count != 4)
                 return false;
             // Assumes vertices are in cyclic order.
@@ -312,7 +498,7 @@ namespace IsoGen
             {
                 Point3D current = vertices[i];
                 Point3D next = vertices[(i + 1) % 4];
-                edgeLengths[i] = Distance(current, next);
+                edgeLengths[i] = current.DistanceTo(next);
             }
             double first = edgeLengths[0];
             foreach (double len in edgeLengths)
@@ -321,14 +507,6 @@ namespace IsoGen
                     return false;
             }
             return true;
-        }
-
-        private static double Distance(Point3D a, Point3D b)
-        {
-            double dx = b.X - a.X;
-            double dy = b.Y - a.Y;
-            double dz = b.Z - a.Z;
-            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
         }
     }
 }
