@@ -1,171 +1,18 @@
-﻿namespace IsoGen
+﻿using static IsoGen.Triangle;
+
+namespace IsoGen
 {
     internal class Program
     {
         static void Main()
         {
-            // Example: Basic Triangle
-            try
-            {
-                List<Point3D> triVertices =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(3, 0, 0),
-                    new Point3D(0, 4, 0)
-                ];
-                Triangle triangle = new(triVertices);
-                Console.WriteLine("Triangle created successfully with vertices:");
-                foreach (var v in triangle.Vertices)
-                    Console.WriteLine(v);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Triangle creation failed: " + ex.Message);
-            }
+            Face face = new(new List<Point3D>() { new(0,0,0), new(0,1,0), new(0,1,1) });
 
-            // Example: Equilateral Triangle
-            try
-            {
-                double side = 5;
-                double height = Math.Sqrt(3) / 2 * side;
-                List<Point3D> eqVertices =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(side, 0, 0),
-                    new Point3D(side / 2, height, 0)
-                ];
-                Triangle.EquilateralTriangle eqTriangle = new(eqVertices);
-                Console.WriteLine("Equilateral triangle created successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Equilateral triangle creation failed: " + ex.Message);
-            }
+            Triangle triangle = new(new List<Point3D>() { new(0, 0, 0), new(0, 1, 0), new(0, 1, 1) });
 
-            // Example: Isosceles Triangle
-            try
-            {
-                List<Point3D> isoVertices =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(4, 0, 0),
-                    new Point3D(2, 3, 0)
-                ];
-                Triangle.IsoscelesTriangle isoTriangle = new(isoVertices);
-                Console.WriteLine("Isosceles triangle created successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Isosceles triangle creation failed: " + ex.Message);
-            }
+            EquilateralTriangle equilateralTriangle = new(new List<Point3D>() { new(0, 0, 0), new(0, 1, 0), new(0, 1, 1) });
 
-            // Example: Right Triangle
-            try
-            {
-                List<Point3D> rightVertices =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(3, 0, 0),
-                    new Point3D(0, 4, 0)
-                ];
-                Triangle.RightTriangle rightTriangle = new(rightVertices);
-                Console.WriteLine("Right triangle created successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Right triangle creation failed: " + ex.Message);
-            }
-
-            // Example: Quadrilateral (using two triangles)
-            try
-            {
-                // Construct a square by splitting along a diagonal.
-                List<Point3D> squareVertices =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(4, 0, 0),
-                    new Point3D(4, 4, 0),
-                    new Point3D(0, 4, 0)
-                ];
-                // First triangle: vertices 0, 1, 2
-                List<Point3D> quadTri1Verts =
-                [
-                    squareVertices[0],
-                    squareVertices[1],
-                    squareVertices[2]
-                ];
-                // Second triangle: vertices 0, 2, 3
-                List<Point3D> quadTri2Verts =
-                [
-                    squareVertices[0],
-                    squareVertices[2],
-                    squareVertices[3]
-                ];
-                Triangle triangle1 = new(quadTri1Verts);
-                Triangle triangle2 = new(quadTri2Verts);
-                Triangle.Quadrilateral quadrilateral = new(triangle1, triangle2);
-                Console.WriteLine("Quadrilateral created successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Quadrilateral creation failed: " + ex.Message);
-            }
-
-            // Example: Rectangle (using two right triangles)
-            try
-            {
-                // Rectangle with width 3 and height 4.
-                // Right triangle 1: vertices (0,0,0), (3,0,0), (3,4,0)
-                List<Point3D> rectTri1 =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(3, 0, 0),
-                    new Point3D(3, 4, 0)
-                ];
-                // Right triangle 2: vertices (0,0,0), (3,4,0), (0,4,0)
-                List<Point3D> rectTri2 =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(3, 4, 0),
-                    new Point3D(0, 4, 0)
-                ];
-                Triangle.RightTriangle rt1 = new(rectTri1);
-                Triangle.RightTriangle rt2 = new(rectTri2);
-                Triangle.Rectangle rectangle = new(rt1, rt2);
-                Console.WriteLine("Rectangle created successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Rectangle creation failed: " + ex.Message);
-            }
-
-            // Example: Square (using two right triangles)
-            try
-            {
-                // Square of side 4.
-                // Right triangle 1: vertices (0,0,0), (4,0,0), (4,4,0)
-                List<Point3D> sqTri1 =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(4, 0, 0),
-                    new Point3D(4, 4, 0)
-                ];
-                // Right triangle 2: vertices (0,0,0), (4,4,0), (0,4,0)
-                List<Point3D> sqTri2 =
-                [
-                    new Point3D(0, 0, 0),
-                    new Point3D(4, 4, 0),
-                    new Point3D(0, 4, 0)
-                ];
-                Triangle.RightTriangle squareRt1 = new(sqTri1);
-                Triangle.RightTriangle squareRt2 = new(sqTri2);
-                Triangle.Square square = new(squareRt1, squareRt2);
-                Console.WriteLine("Square created successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Square creation failed: " + ex.Message);
-            }
+            IsoscelesTriangle isoscelesTriangle = new(new List<Point3D>() { new(0, 0, 0), new(0, 1, 0), new(0, 1, 1) });
 
             //    // Save the drawn image to a file
             //    string filePath = "3DIsometricSpace.png";
