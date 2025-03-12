@@ -1,4 +1,6 @@
-﻿namespace IsoGen
+﻿using static IsoGen.Geometry;
+
+namespace IsoGen
 {
     internal class Program
     {
@@ -11,7 +13,7 @@
 
             try
             {
-                var rightTriangle = new Triangle.RightTriangle([A, B, C]);
+                var rightTriangle = new Triangle.Right([A, B, C]);
                 Console.WriteLine("Derékszögű háromszög csúcsai:");
                 foreach (var vertex in rightTriangle.Vertices)
                 {
@@ -39,7 +41,7 @@
 
             try
             {
-                var rightTriangleForSquare = new Triangle.RightTriangle([P, Q, R]);
+                var rightTriangleForSquare = new Triangle.Right([P, Q, R]);
                 var square = new Square(rightTriangleForSquare);
                 Console.WriteLine("\nNégyzet csúcsai:");
                 foreach (var vertex in square.Vertices)
@@ -61,8 +63,8 @@
             Console.WriteLine($"v1 + v2: {v1 + v2}");
             Console.WriteLine($"v1 - v2: {v1 - v2}");
             Console.WriteLine($"v1 * 2: {v1 * 2}");
-            Console.WriteLine($"v1 dot v2: {Vector3D.DotProduct(v1, v2)}");
-            Console.WriteLine($"v1 cross v2: {Vector3D.CrossProduct(v1, v2)}");
+            Console.WriteLine($"v1 dot v2: {v1.Dot(v2)}");
+            Console.WriteLine($"v1 cross v2: {v1.Cross(v2)}");
 
             Console.WriteLine("\nNyomj meg egy billentyűt a kilépéshez...");
             Console.ReadKey();
