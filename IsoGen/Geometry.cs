@@ -149,7 +149,7 @@
             public override string ToString() => $"({X}, {Y}, {Z})";
         }
 
-        public class Edge(Geometry.Point3D a, Geometry.Point3D b)
+        public class Edge(Point3D a, Point3D b)
         {
             public Point3D A { get; } = a;
             public Point3D B { get; } = b;
@@ -467,7 +467,236 @@
                     return Math.Abs(sides[2] * sides[2] - (sides[0] * sides[0] + sides[1] * sides[1])) < Tolerance;
                 }
             }
-
         }
+        public class Quadrilateral : Face
+        {
+
+            public Quadrilateral(List<Point3D> vertices) : base(vertices)
+            {
+                if (vertices.Count != 4)
+                {
+                    throw new ArgumentException("A quadrilateral must contain exactly 4 vertices.");
+                }
+            }
+
+            public Quadrilateral(List<Edge> edges) : base(edges)
+            {
+                if (edges.Count != 4)
+                {
+                    throw new ArgumentException("A quadrilateral must contain exactly 4 edges.");
+                }
+            }
+
+            public Quadrilateral(Triangle triangle1, Triangle triangle2) : base(UniqueVertices(new List<Triangle>() { triangle1, triangle2}))
+            {
+
+            }
+
+            private static List<Point3D> UniqueVertices(List<Triangle> triangles)
+            {
+                throw new NotImplementedException();
+            }
+
+            // Compute the total area of the quadrilateral
+            public double Area
+            {
+                get
+                {
+                    // Split the quadrilateral into two triangles
+                    Triangle t1 = new([Vertices[0], Vertices[1], Vertices[2]]);
+                    Triangle t2 = new([Vertices[0], Vertices[2], Vertices[3]]);
+
+                    return t1.Area + t2.Area;
+                }
+            }
+
+            // Compute the perimeter (sum of all edge lengths)
+            public double Perimeter => Edges[0].Length() + Edges[1].Length() + Edges[2].Length() + Edges[3].Length();
+        }
+        public class Rectangle : Quadrilateral
+        {
+            public Rectangle(List<Point3D> vertices) : base(vertices)
+            {
+                if (!IsValidRectangle())
+                {
+                    throw new ArgumentException("The given points do not form a valid rectangle.");
+                }
+            }
+
+            public Rectangle(List<Edge> edges) : base(edges)
+            {
+                if (!IsValidRectangle())
+                {
+                    throw new ArgumentException("The given edges do not form a valid rectangle.");
+                }
+            }
+
+            private bool IsValidRectangle()
+            {
+                double a = Edges[0].Length();
+                double b = Edges[1].Length();
+                double c = Edges[2].Length();
+                double d = Edges[3].Length();
+
+                // Opposite sides must be equal
+                bool oppositeSidesEqual = Math.Abs(a - c) < Tolerance && Math.Abs(b - d) < Tolerance;
+
+                // Adjacent edges must be perpendicular (dot product = 0)
+                bool rightAngles = Math.Abs(Edges[0].Direction().Dot(Edges[1].Direction())) < Tolerance &&
+                                   Math.Abs(Edges[1].Direction().Dot(Edges[2].Direction())) < Tolerance &&
+                                   Math.Abs(Edges[2].Direction().Dot(Edges[3].Direction())) < Tolerance &&
+                                   Math.Abs(Edges[3].Direction().Dot(Edges[0].Direction())) < Tolerance;
+
+                return oppositeSidesEqual && rightAngles;
+            }
+        }
+        public class Square : Rectangle
+        {
+            public Square(List<Point3D> vertices) : base(vertices)
+            {
+                if (!IsValidSquare())
+                {
+                    throw new ArgumentException("The given points do not form a valid square.");
+                }
+            }
+
+            public Square(List<Edge> edges) : base(edges)
+            {
+                if (!IsValidSquare())
+                {
+                    throw new ArgumentException("The given edges do not form a valid square.");
+                }
+            }
+
+            private bool IsValidSquare()
+            {
+                double a = Edges[0].Length();
+                double b = Edges[1].Length();
+                double c = Edges[2].Length();
+                double d = Edges[3].Length();
+
+                // All sides must be equal
+                return Math.Abs(a - b) < Tolerance &&
+                       Math.Abs(b - c) < Tolerance &&
+                       Math.Abs(c - d) < Tolerance;
+            }
+        }
+        public class Parallelogram : Quadrilateral
+        {
+            public Parallelogram(List<Point3D> vertices) : base(vertices)
+            {
+                if (!IsValidParallelogram())
+                {
+                    throw new ArgumentException("The given points do not form a valid parallelogram.");
+                }
+            }
+
+            public Parallelogram(List<Edge> edges) : base(edges)
+            {
+                if (!IsValidParallelogram())
+                {
+                    throw new ArgumentException("The given edges do not form a valid parallelogram.");
+                }
+            }
+
+            private bool IsValidParallelogram()
+            {
+                double a = Edges[0].Length();
+                double b = Edges[1].Length();
+                double c = Edges[2].Length();
+                double d = Edges[3].Length();
+
+                // Opposite sides must be equal
+                return Math.Abs(a - c) < Tolerance && Math.Abs(b - d) < Tolerance;
+            }
+        }
+        public class Rhombus : Parallelogram
+        {
+            public Rhombus(List<Point3D> vertices) : base(vertices)
+            {
+                if (!IsValidRhombus())
+                {
+                    throw new ArgumentException("The given points do not form a valid rhombus.");
+                }
+            }
+
+            public Rhombus(List<Edge> edges) : base(edges)
+            {
+                if (!IsValidRhombus())
+                {
+                    throw new ArgumentException("The given edges do not form a valid rhombus.");
+                }
+            }
+
+            private bool IsValidRhombus()
+            {
+                double a = Edges[0].Length();
+                double b = Edges[1].Length();
+                double c = Edges[2].Length();
+                double d = Edges[3].Length();
+
+                // All four sides must be equal
+                return Math.Abs(a - b) < Tolerance &&
+                       Math.Abs(b - c) < Tolerance &&
+                       Math.Abs(c - d) < Tolerance;
+            }
+        }
+        public class Trapezoid : Quadrilateral
+        {
+            public Trapezoid(List<Point3D> vertices) : base(vertices)
+            {
+                if (!IsValidTrapezoid())
+                {
+                    throw new ArgumentException("The given points do not form a valid trapezoid.");
+                }
+            }
+
+            public Trapezoid(List<Edge> edges) : base(edges)
+            {
+                if (!IsValidTrapezoid())
+                {
+                    throw new ArgumentException("The given edges do not form a valid trapezoid.");
+                }
+            }
+
+            private bool IsValidTrapezoid()
+            {
+                // Check if one pair of opposite edges are parallel
+                bool onePairParallel = Math.Abs(Edges[0].Direction().Dot(Edges[2].Direction())) < Tolerance ||
+                                       Math.Abs(Edges[1].Direction().Dot(Edges[3].Direction())) < Tolerance;
+                return onePairParallel;
+            }
+        }
+        public class Kite : Quadrilateral
+        {
+            public Kite(List<Point3D> vertices) : base(vertices)
+            {
+                if (!IsValidKite())
+                {
+                    throw new ArgumentException("The given points do not form a valid kite.");
+                }
+            }
+
+            public Kite(List<Edge> edges) : base(edges)
+            {
+                if (!IsValidKite())
+                {
+                    throw new ArgumentException("The given edges do not form a valid kite.");
+                }
+            }
+
+            private bool IsValidKite()
+            {
+                double a = Edges[0].Length();
+                double b = Edges[1].Length();
+                double c = Edges[2].Length();
+                double d = Edges[3].Length();
+
+                // Adjacent pairs must be equal (AB = BC and CD = DA)
+                return (Math.Abs(a - b) < Tolerance && Math.Abs(c - d) < Tolerance) ||
+                       (Math.Abs(a - d) < Tolerance && Math.Abs(b - c) < Tolerance);
+            }
+        }
+
     }
 }
