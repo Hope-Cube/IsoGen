@@ -6,67 +6,89 @@ namespace IsoGen
     {
         static void Main()
         {
-            // Példa: Derékszögű háromszög létrehozása három pontból.
-            var A = new Point3D(0, 0, 0);
-            var B = new Point3D(3, 0, 0);
-            var C = new Point3D(0, 4, 0);
+            Console.WriteLine("=== Point3D Tests ===");
+            var p1 = new Point3D(0, 0, 0);
+            var p2 = new Point3D(3, 4, 0);
+            Console.WriteLine($"p1: {p1}, p2: {p2}");
+            Console.WriteLine($"Distance p1 -> p2: {p1.DistanceTo(p2)} (Expected: 5)");
 
             try
             {
-                var rightTriangle = new Triangle.Right([A, B, C]);
-                Console.WriteLine("Derékszögű háromszög csúcsai:");
-                foreach (var vertex in rightTriangle.Vertices)
-                {
-                    Console.WriteLine(vertex);
-                }
-
-                // Téglalap létrehozása a fenti derékszögű háromszögből:
-                var rectangle = new Rectangle(rightTriangle);
-                Console.WriteLine("\nTéglalap csúcsai:");
-                foreach (var vertex in rectangle.Vertices)
-                {
-                    Console.WriteLine(vertex);
-                }
+                var center = Point3D.GetCenter([p1, p2]);
+                Console.WriteLine($"Center of p1 and p2: {center}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Hiba a derékszögű háromszög vagy téglalap létrehozásakor: {ex.Message}");
+                Console.WriteLine($"Error in GetCenter: {ex.Message}");
             }
 
-            // Példa: Négyzet létrehozása egy olyan derékszögű háromszögből,
-            // amely egy négyzet felét adja (például oldallengede 5 egység).
-            var P = new Point3D(0, 0, 0);
-            var Q = new Point3D(5, 0, 0);
-            var R = new Point3D(0, 5, 0);
+            Console.WriteLine("\n=== Edge Tests ===");
+            var edge = new Edge(p1, p2);
+            Console.WriteLine($"Edge: {edge}, Length: {edge.Length} (Expected: 5)");
+            Console.WriteLine($"Edge Direction: {edge.Direction()} (Normalized)");
 
             try
             {
-                var rightTriangleForSquare = new Triangle.Right([P, Q, R]);
-                var square = new Square(rightTriangleForSquare);
-                Console.WriteLine("\nNégyzet csúcsai:");
-                foreach (var vertex in square.Vertices)
-                {
-                    Console.WriteLine(vertex);
-                }
+                var invalidEdge = new Edge(p1, p1);
+                Console.WriteLine($"Invalid Edge: {invalidEdge.Length}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Hiba a négyzet létrehozásakor: {ex.Message}");
+                Console.WriteLine($"Error in Edge creation: {ex.Message}");
             }
 
-            // Példa: Vektor műveletek demonstrálása.
-            var v1 = new Vector3D(1, 2, 3);
-            var v2 = new Vector3D(4, 5, 6);
-            Console.WriteLine("\nVektor műveletek:");
-            Console.WriteLine($"v1: {v1}");
-            Console.WriteLine($"v2: {v2}");
-            Console.WriteLine($"v1 + v2: {v1 + v2}");
-            Console.WriteLine($"v1 - v2: {v1 - v2}");
-            Console.WriteLine($"v1 * 2: {v1 * 2}");
-            Console.WriteLine($"v1 dot v2: {v1.Dot(v2)}");
-            Console.WriteLine($"v1 cross v2: {v1.Cross(v2)}");
+            Console.WriteLine("\n=== Triangle Tests ===");
+            var p3 = new Point3D(0, 0, 5);
+            var triangle = new Triangle([p1, p2, p3]);
+            Console.WriteLine($"Triangle vertices: {triangle.Verticestring()}");
+            Console.WriteLine($"Triangle Area: {triangle.Area}");
+            Console.WriteLine($"Triangle Perimeter: {triangle.Perimeter}");
+            Console.WriteLine($"Triangle Normal: {triangle.Normal}");
 
-            Console.WriteLine("\nNyomj meg egy billentyűt a kilépéshez...");
+            try
+            {
+                var collinearTriangle = new Triangle([p1, new Point3D(1, 1, 1), new Point3D(2, 2, 2)]);
+                Console.WriteLine($"Collinear Triangle: {collinearTriangle.ToString()}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+
+            Console.WriteLine("\n=== Rectangle Tests ===");
+            var rect = new Rectangle([p1, new Point3D(5, 0, 0), new Point3D(5, 3, 0), new Point3D(0, 3, 0)]);
+            Console.WriteLine($"Rectangle vertices: {rect.Verticestring()}");
+            Console.WriteLine($"Rectangle Area: {rect.Area}");
+            Console.WriteLine($"Rectangle Perimeter: {rect.Perimeter}");
+
+            try
+            {
+                var invalidRect = new Rectangle([p1, p2, p3, new Point3D(1, 1, 1)]);
+                Console.WriteLine($"Invalid Rectangle: {invalidRect}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+
+            Console.WriteLine("\n=== Square Tests ===");
+            var square = new Square([p1, new Point3D(0, 4, 0), new Point3D(4, 4, 0), new Point3D(4, 0, 0)]);
+            Console.WriteLine($"Square vertices: {square.Verticestring()}");
+            Console.WriteLine($"Square Area: {square.Area}");
+            Console.WriteLine($"Square Perimeter: {square.Perimeter}");
+
+            try
+            {
+                var invalidSquare = new Square([p1, new Point3D(0, 5, 0), new Point3D(6, 5, 0), new Point3D(6, 0, 0)]);
+                Console.WriteLine($"Invalid Square: {invalidSquare}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+
+            Console.WriteLine("\nAll tests completed!");
+
             Console.ReadKey();
 
             //    // Save the drawn image to a file
