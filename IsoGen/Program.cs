@@ -6,88 +6,17 @@ namespace IsoGen
     {
         static void Main()
         {
-            Console.WriteLine("=== Point3D Tests ===");
-            var p1 = new Point3D(0, 0, 0);
-            var p2 = new Point3D(3, 4, 0);
-            Console.WriteLine($"p1: {p1}, p2: {p2}");
-            Console.WriteLine($"Distance p1 -> p2: {p1.DistanceTo(p2)} (Expected: 5)");
+            Point3D point3D = new(1, 2, 0);
+            Point3D point3D2 = new(3, 4, 0);
 
-            try
-            {
-                var center = Point3D.GetCenter([p1, p2]);
-                Console.WriteLine($"Center of p1 and p2: {center}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in GetCenter: {ex.Message}");
-            }
+            Console.WriteLine(point3D.ToString() + "\n");
 
-            Console.WriteLine("\n=== Edge Tests ===");
-            var edge = new Edge(p1, p2);
-            Console.WriteLine($"Edge: {edge}, Length: {edge.Length} (Expected: 5)");
-            Console.WriteLine($"Edge Direction: {edge.Direction()} (Normalized)");
+            Edge edge = new(point3D, point3D2);
 
-            try
-            {
-                var invalidEdge = new Edge(p1, p1);
-                Console.WriteLine($"Invalid Edge: {invalidEdge.Length}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in Edge creation: {ex.Message}");
-            }
-
-            Console.WriteLine("\n=== Triangle Tests ===");
-            var p3 = new Point3D(0, 0, 5);
-            var triangle = new Triangle([p1, p2, p3]);
-            Console.WriteLine($"Triangle vertices: {triangle.Verticestring()}");
-            Console.WriteLine($"Triangle Area: {triangle.Area}");
-            Console.WriteLine($"Triangle Perimeter: {triangle.Perimeter}");
-            Console.WriteLine($"Triangle Normal: {triangle.Normal}");
-
-            try
-            {
-                var collinearTriangle = new Triangle([p1, new Point3D(1, 1, 1), new Point3D(2, 2, 2)]);
-                Console.WriteLine($"Collinear Triangle: {collinearTriangle.ToString()}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
-
-            Console.WriteLine("\n=== Rectangle Tests ===");
-            var rect = new Rectangle([p1, new Point3D(5, 0, 0), new Point3D(5, 3, 0), new Point3D(0, 3, 0)]);
-            Console.WriteLine($"Rectangle vertices: {rect.Verticestring()}");
-            Console.WriteLine($"Rectangle Area: {rect.Area}");
-            Console.WriteLine($"Rectangle Perimeter: {rect.Perimeter}");
-
-            try
-            {
-                var invalidRect = new Rectangle([p1, p2, p3, new Point3D(1, 1, 1)]);
-                Console.WriteLine($"Invalid Rectangle: {invalidRect}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
-
-            Console.WriteLine("\n=== Square Tests ===");
-            var square = new Square([p1, new Point3D(0, 4, 0), new Point3D(4, 4, 0), new Point3D(4, 0, 0)]);
-            Console.WriteLine($"Square vertices: {square.Verticestring()}");
-            Console.WriteLine($"Square Area: {square.Area}");
-            Console.WriteLine($"Square Perimeter: {square.Perimeter}");
-
-            try
-            {
-                var invalidSquare = new Square([p1, new Point3D(0, 5, 0), new Point3D(6, 5, 0), new Point3D(6, 0, 0)]);
-                Console.WriteLine($"Invalid Square: {invalidSquare}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
-
-            Console.WriteLine("\nAll tests completed!");
+            Console.WriteLine(edge.ToString());
+            Console.WriteLine(edge.Length);
+            Console.WriteLine(edge.A);
+            Console.WriteLine(edge.B);
 
             Console.ReadKey();
 
