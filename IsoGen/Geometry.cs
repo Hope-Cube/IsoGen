@@ -1,11 +1,9 @@
-﻿using static IsoGen.Geometry;
-
-namespace IsoGen
+﻿namespace IsoGen
 {
     class Geometry
     {
         private static readonly double Tolerance = 1e-6;
-        public class Point3D(double x, double y, double z)
+        public class Point3D(double x, double y, double z = 0)
         {
             public double X { get; } = x;
             public double Y { get; } = y;
@@ -26,7 +24,7 @@ namespace IsoGen
                     sumZ += point.Z;
                 }
 
-                return new Point3D(Math.Round(sumX / count, 6), Math.Round(sumY / count, 6), Math.Round(sumZ / count, 6));
+                return new Point3D(sumX / count, sumY / count, sumZ / count);
             }
 
             // Divide the segment into 'n' equal parts and return the vertices
@@ -107,7 +105,7 @@ namespace IsoGen
             public double Dot(Vector3D other) => Math.Round(X * other.X + Y * other.Y + Z * other.Z, 6);
 
             // Cross Product
-            public Vector3D Cross(Vector3D other) => new(Math.Round(Y* other.Z - Z* other.Y, 6),Math.Round(Z* other.X - X* other.Z, 6),Math.Round(X* other.Y - Y* other.X, 6));
+            public Vector3D Cross(Vector3D other) => new(Y * other.Z - Z * other.Y,Z * other.X - X * other.Z,X * other.Y - Y * other.X);
 
 
             // Normalization
@@ -128,17 +126,17 @@ namespace IsoGen
                     throw new InvalidOperationException("Cannot calculate angle with zero vector.");
 
                 double cosTheta = dotProduct / magnitudeProduct;
-                return Math.Round(Math.Acos(cosTheta) * (180 / Math.PI), 6); // Convert radians to degrees
+                return Math.Acos(cosTheta) * (180 / Math.PI); // Convert radians to degrees
             }
 
             // Angle with the X-axis (Azimuth / Yaw)
-            public double AngleWithX => Math.Round(Math.Atan2(Y, X) * (180 / Math.PI), 6);
+            public double AngleWithX => Math.Atan2(Y, X) * (180 / Math.PI);
 
             // Angle with the Y-axis (Elevation / Pitch)
-            public double AngleWithY => Math.Round(Math.Atan2(Z, Math.Sqrt(X * X + Y * Y)) * (180 / Math.PI), 6);
+            public double AngleWithY => Math.Atan2(Z, Math.Sqrt(X * X + Y * Y)) * (180 / Math.PI);
 
             // Angle with the Z-axis (Inclination / Roll)
-            public double AngleWithZ => Math.Round(Math.Atan2(Math.Sqrt(X * X + Y * Y), Z) * (180 / Math.PI), 6);
+            public double AngleWithZ => Math.Atan2(Math.Sqrt(X * X + Y * Y), Z) * (180 / Math.PI);
 
             public override string ToString() => $"({X}, {Y}, {Z})";
         }
@@ -149,7 +147,7 @@ namespace IsoGen
             public Point3D B { get; } = b;
 
             // Get the Length of the edge
-            public double Length => Math.Round(A.DistanceTo(B), 6);
+            public double Length => A.DistanceTo(B);
 
             // Get the direction as a normalized vector
             public Vector3D Direction()
@@ -161,7 +159,7 @@ namespace IsoGen
             // Get the angle between two edges
             public double AngleBetween(Edge other)
             {
-                Vector3D dir1 = this.Direction();
+                Vector3D dir1 = Direction();
                 Vector3D dir2 = other.Direction();
                 return dir1.AngleBetween(dir2);
             }
@@ -328,7 +326,13 @@ namespace IsoGen
         }
         public class Triangle : Face
         {
-
+            public Triangle(Point3D a, Point3D b, Point3D c) : base([a, b, c])
+            {
+                if(!IsValidTriangle())
+                {
+                    throw new ArgumentException("The given points do not form a valid triangle.");
+                }
+            }
             public Triangle(List<Point3D> vertices) : base(vertices)
             {
                 if (vertices.Count != 3)
@@ -357,24 +361,27 @@ namespace IsoGen
 
             private bool IsValidTriangle()
             {
-                double a = Math.Round(Edges[0].Length, 6);
-                double b = Math.Round(Edges[1].Length, 6);
-                double c = Math.Round(Edges[2].Length, 6);
+                Point3D A = Edges[0].A;
+                Point3D B = Edges[1].A;
+                Point3D C = Edges[1].B;
 
-                bool validSides = (a + b > c) && (a + c > b) && (b + c > a);
+                double a = Edges[0].Length;
+                double b = Edges[1].Length;
+                double c = Edges[2].Length;
+
+                // Check Triangle Inequality Theorem
+                bool validSides = (a + b >= c) && (a + c >= b) && (b + c >= a);
                 if (!validSides) return false;
 
-                Vector3D v1 = Edges[0].Direction();
-                Vector3D v2 = Edges[1].Direction();
+                // Collinearity Check using Cross Product
+                Vector3D v1 = B - C;
+                Vector3D v2 = C - A;
                 Vector3D cross = v1.Cross(v2);
 
-                if (Math.Round(cross.X, 6) == 0 && Math.Round(cross.Y, 6) == 0 && Math.Round(cross.Z, 6) == 0)
-                    throw new ArgumentException("The given points are collinear and do not form a valid triangle.");
-
-                return true;
+                return !(cross.X == 0 && cross.Y == 0 && cross.Z == 0);
             }
 
-            public double Area => Math.Round(CalculateArea(), 6);
+            public double Area => CalculateArea();
 
             private double CalculateArea()
             {
@@ -386,7 +393,7 @@ namespace IsoGen
                 return Math.Round(Math.Sqrt(s * (s - a) * (s - b) * (s - c)), 6);
             }
 
-            public double Perimeter => Math.Round(Edges[0].Length + Edges[1].Length + Edges[2].Length, 6);
+            public double Perimeter => Edges[0].Length + Edges[1].Length + Edges[2].Length;
 
             public Vector3D Normal
             {
@@ -540,12 +547,17 @@ namespace IsoGen
                     Triangle t1 = new([Vertices[0], Vertices[1], Vertices[2]]);
                     Triangle t2 = new([Vertices[0], Vertices[2], Vertices[3]]);
 
-                    return Math.Round(t1.Area + t2.Area, 6);
+                    return t1.Area + t2.Area;
                 }
             }
 
             // Compute the perimeter (sum of all edge Lengths)
-            public double Perimeter => Math.Round(Edges[0].Length + Edges[1].Length + Edges[2].Length + Edges[3].Length, 6);
+            public double Perimeter => Edges[0].Length + Edges[1].Length + Edges[2].Length + Edges[3].Length;
+
+            public override string ToString()
+            {
+                return string.Join(", ", Edges);
+            }
         }
         public class Rectangle : Quadrilateral
         {
@@ -562,6 +574,14 @@ namespace IsoGen
                 if (!IsValidRectangle())
                 {
                     throw new ArgumentException("The given edges do not form a valid rectangle.");
+                }
+            }
+
+            public Rectangle(Point3D a, Point3D b, Point3D c, Point3D d) : base([a, b, c, d])
+            {
+                if (!IsValidRectangle())
+                {
+                    throw new ArgumentException("The given points do not form a valid rectangle.");
                 }
             }
 
@@ -599,6 +619,14 @@ namespace IsoGen
                 if (!IsValidSquare())
                 {
                     throw new ArgumentException("The given edges do not form a valid square.");
+                }
+            }
+
+            public Square(Point3D a, Point3D b, Point3D c, Point3D d) : base(a, b, c, d)
+            {
+                if (!IsValidSquare())
+                {
+                    throw new ArgumentException("The given points do not form a valid square.");
                 }
             }
 
