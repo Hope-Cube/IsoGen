@@ -1,4 +1,6 @@
-﻿namespace IsoGen
+﻿using static IsoGen.Geometry;
+
+namespace IsoGen
 {
     /// <summary>
     /// Contains geometric structures and operations for 3D geometry.
@@ -20,14 +22,15 @@
             public double Z { get; } = z;
 
             /// <summary>
-            /// Computes the center (average position) of a list of 3D points.
+            /// Computes the simple geometric center (average position of vertices).
+            /// May be outside the shape for non-convex polygons.
             /// </summary>
-            /// <param name="vertices">A list of 3D points.</param>
-            /// <returns>The computed center point.</returns>
+            /// <param name="vertices">A list of 3D points forming a face.</param>
+            /// <returns>The computed geometric center.</returns>
             public static Point3D GetCenter(List<Point3D> vertices)
             {
-                if (vertices == null || vertices.Count == 0)
-                    throw new ArgumentException("Point list cannot be empty.");
+                if (vertices == null || vertices.Count < 3)
+                    throw new ArgumentException("A face must have at least 3 vertices.");
 
                 double sumX = 0, sumY = 0, sumZ = 0;
                 int count = vertices.Count;
@@ -41,6 +44,40 @@
 
                 return new Point3D(sumX / count, sumY / count, sumZ / count);
             }
+
+            /// <summary>
+            /// Computes the center of mass (centroid) of a planar face, 
+            /// using area-weighted triangulation for more accuracy.
+            /// </summary>
+            /// <param name="vertices">A list of 3D points forming a face.</param>
+            /// <returns>The computed centroid (center of mass) of the face.</returns>
+            public static Point3D GetCenterOfMass(List<Point3D> vertices)
+            {
+                if (vertices == null || vertices.Count < 3)
+                    throw new ArgumentException("A face must have at least 3 vertices.");
+
+                List<Triangle> triangles = Face.Triangulate(vertices);
+
+                double totalArea = 0;
+                double sumX = 0, sumY = 0, sumZ = 0;
+
+                foreach (var triangle in triangles)
+                {
+                    Point3D centroid = GetCenter(triangle.Vertices); // Geometric center of the triangle
+                    double area = triangle.Area; // Use the triangle's area
+
+                    totalArea += area;
+                    sumX += centroid.X * area;
+                    sumY += centroid.Y * area;
+                    sumZ += centroid.Z * area;
+                }
+
+                if (totalArea == 0)
+                    throw new InvalidOperationException("Cannot compute center of mass: total area is zero.");
+
+                return new Point3D(sumX / totalArea, sumY / totalArea, sumZ / totalArea);
+            }
+
 
             /// <summary>
             /// Divides the segment between this point and another into 'n' equal parts.
@@ -274,17 +311,46 @@
         {
             private List<Point3D> _vertices;
             private List<Edge> _edges;
+            internal List<Triangle> _triangles = [];
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Face"/> class using a center point, radius, and number of vertices.
+            /// </summary>
+            public Face(Point3D c, double r, int n, bool isRadius = true)
+            {
+                if (n < 3)
+                    throw new ArgumentException("A face must contain at least 3 vertices.");
+                if (r <= 0)
+                    throw new ArgumentException("The radius/side length must be greater than zero.");
+
+                List<Point3D> vertices = [];
+
+                // Compute actual radius if using side length
+                double radius = isRadius ? r : r / (2 * Math.Sin(Math.PI / n));
+
+                for (int i = 0; i < n; i++)
+                {
+                    double angle = (2 * Math.PI * i) / n;  // Evenly spaced angles
+                    double x = c.X + radius * Math.Cos(angle);
+                    double y = c.Y + radius * Math.Sin(angle);
+                    double z = c.Z;  // Keeping Z fixed for a flat polygon
+
+                    vertices.Add(new Point3D(x, y, z));
+                }
+
+                _vertices = vertices;
+                _edges = ConvertToEdges(_vertices);
+
+                EnsureTriangulated();
+            }
+
 
             /// <summary>
             /// Initializes a new instance of the <see cref="Face"/> class using a list of vertices.
             /// </summary>
-            /// <param name="vertices">A list of 3D points defining the face.</param>
-            /// <exception cref="ArgumentException">Thrown if the vertex count is less than 3 or if they are not coplanar.</exception>
             public Face(List<Point3D> vertices)
             {
                 if (vertices.Count < 3)
                     throw new ArgumentException("A face must contain at least 3 vertices.");
-
                 if (!IsCoplanar(vertices))
                     throw new ArgumentException("The given vertices do not lie in the same plane.");
 
@@ -295,13 +361,10 @@
             /// <summary>
             /// Initializes a new instance of the <see cref="Face"/> class using a list of edges.
             /// </summary>
-            /// <param name="edges">A list of edges defining the face.</param>
-            /// <exception cref="ArgumentException">Thrown if the edge count is less than 3 or if they do not form a closed loop.</exception>
             public Face(List<Edge> edges)
             {
                 if (edges.Count < 3)
                     throw new ArgumentException("A face must contain at least 3 edges.");
-
                 if (!EdgesFormClosedLoop(edges))
                     throw new ArgumentException("Edges do not form a closed loop.");
 
@@ -311,80 +374,65 @@
                 if (!IsCoplanar(_vertices))
                     throw new ArgumentException("The vertices of the given edges do not lie in the same plane.");
             }
+            /// <summary>
+            /// Ensures that the face is triangulated, but only when needed.
+            /// </summary>
+            public void EnsureTriangulated()
+            {
+                if (_triangles.Count == 0) // Only triangulate if not already done
+                {
+                    _triangles = (_vertices.Count == 3)
+                        ? new List<Triangle> { (Triangle)this } // Store itself if it's a triangle
+                        : Triangulate(_vertices);
+                }
+            }
+
+            /// <summary>
+            /// Triangulates the face if it has more than 3 vertices.
+            /// </summary>
+            internal static List<Triangle> Triangulate(List<Point3D> vertices)
+            {
+                List<Triangle> triangles = [];
+
+
+                // Fan Triangulation: Use the first vertex as the "anchor"
+                Point3D anchor = vertices[0];
+
+                for (int i = 1; i < vertices.Count - 1; i++)
+                {
+                    Point3D a = vertices[i];
+                    Point3D b = vertices[i + 1];
+
+                    triangles.Add(new Triangle(anchor, a, b));
+                }
+                return triangles;
+            }
 
             /// <summary>
             /// Gets the center point of the face.
             /// </summary>
-            /// <returns>The center of the face.</returns>
-            public Point3D GetCenter() => Point3D.GetCenter(_vertices);
+            public Point3D Center => Point3D.GetCenter(_vertices);
 
             /// <summary>
-            /// Rotates the face around its center along the specified axis.
+            /// Gets the list of vertices defining the face.
             /// </summary>
-            /// <param name="axis">The axis ('X', 'Y', or 'Z') to rotate around.</param>
-            /// <param name="angleDegrees">The angle of rotation in degrees.</param>
-            public void RotateAroundCenter(char axis, double angleDegrees)
-            {
-                Point3D center = GetCenter();
-                RotateAround(center, axis, angleDegrees);
-            }
+            public List<Point3D> Vertices => _vertices;
 
             /// <summary>
-            /// Rotates the face around a specified point along the given axis.
+            /// Gets the list of edges defining the face.
             /// </summary>
-            /// <param name="center">The point around which to rotate.</param>
-            /// <param name="axis">The axis ('X', 'Y', or 'Z') to rotate around.</param>
-            /// <param name="angleDegrees">The angle of rotation in degrees.</param>
-            /// <exception cref="ArgumentException">Thrown if an invalid axis is specified.</exception>
-            public void RotateAround(Point3D center, char axis, double angleDegrees)
-            {
-                double radians = angleDegrees * Math.PI / 180;
+            public List<Edge> Edges => _edges;
 
-                for (int i = 0; i < _vertices.Count; i++)
+            /// <summary>
+            /// Returns the triangles of the face. Calls EnsureTriangulated() if needed.
+            /// </summary>
+            public List<Triangle> Triangles
+            {
+                get
                 {
-                    double x = _vertices[i].X - center.X;
-                    double y = _vertices[i].Y - center.Y;
-                    double z = _vertices[i].Z - center.Z;
-
-                    double newX = x, newY = y, newZ = z;
-
-                    switch (char.ToUpper(axis))
-                    {
-                        case 'X':
-                            newY = y * Math.Cos(radians) - z * Math.Sin(radians);
-                            newZ = y * Math.Sin(radians) + z * Math.Cos(radians);
-                            break;
-                        case 'Y':
-                            newX = z * Math.Sin(radians) + x * Math.Cos(radians);
-                            newZ = z * Math.Cos(radians) - x * Math.Sin(radians);
-                            break;
-                        case 'Z':
-                            newX = x * Math.Cos(radians) - y * Math.Sin(radians);
-                            newY = x * Math.Sin(radians) + y * Math.Cos(radians);
-                            break;
-                        default:
-                            throw new ArgumentException("Invalid axis. Use 'X', 'Y', or 'Z'.");
-                    }
-
-                    _vertices[i] = new Point3D(newX + center.X, newY + center.Y, newZ + center.Z);
+                    EnsureTriangulated();
+                    return _triangles;
                 }
-
-                _edges = ConvertToEdges(_vertices);
-            }
-
-            /// <summary>
-            /// Orders the vertices in a counterclockwise manner around their centroid.
-            /// </summary>
-            /// <param name="points">The list of points to order.</param>
-            /// <returns>The ordered list of points.</returns>
-            /// <exception cref="ArgumentException">Thrown if the point count is less than 3.</exception>
-            protected static List<Point3D> OrderVertices(List<Point3D> points)
-            {
-                if (points.Count < 3)
-                    throw new ArgumentException("A face must have at least 3 vertices.");
-
-                Point3D center = Point3D.GetCenter(points);
-                return [.. points.OrderBy(p => Math.Atan2(p.Y - center.Y, p.X - center.X))];
             }
 
             /// <summary>
@@ -426,7 +474,6 @@
             /// <summary>
             /// Determines if a set of vertices are coplanar.
             /// </summary>
-            /// <returns>True if all vertices are coplanar; otherwise, false.</returns>
             private static bool IsCoplanar(List<Point3D> vertices)
             {
                 if (vertices.Count <= 3) return true;
@@ -441,7 +488,7 @@
                 for (int i = 3; i < vertices.Count; i++)
                 {
                     double x = vertices[i].X, y = vertices[i].Y, z = vertices[i].Z;
-                    if (Math.Abs(A * x + B * y + C * z + D) > Tolerance) return false;
+                    if (Math.Abs(A * x + B * y + C * z + D) > 1e-6) return false;
                 }
 
                 return true;
@@ -450,7 +497,6 @@
             /// <summary>
             /// Checks if the given edges form a closed loop.
             /// </summary>
-            /// <returns>True if the edges form a closed loop; otherwise, false.</returns>
             private static bool EdgesFormClosedLoop(List<Edge> edges)
             {
                 HashSet<Point3D> uniqueVertices = [];
@@ -461,29 +507,22 @@
                 }
                 return uniqueVertices.Count == edges.Count;
             }
-
             /// <summary>
-            /// Gets the list of vertices defining the face.
+            /// Orders the vertices in a counterclockwise manner around their centroid.
             /// </summary>
-            public List<Point3D> Vertices => _vertices;
+            internal static List<Point3D> OrderVertices(List<Point3D> points)
+            {
+                if (points.Count < 3)
+                    throw new ArgumentException("A face must have at least 3 vertices.");
 
-            /// <summary>
-            /// Gets the list of edges defining the face.
-            /// </summary>
-            public List<Edge> Edges => _edges;
+                // Compute centroid
+                Point3D center = Point3D.GetCenter(points);
 
-            /// <summary>
-            /// Returns a formatted string representation of the face's vertices.
-            /// </summary>
-            /// <returns>A semicolon-separated list of vertex coordinates.</returns>
-            public string Verticestring() => string.Join("; ", _vertices.Select(p => p.ToString()));
-
-            /// <summary>
-            /// Returns a formatted string representation of the face's edges.
-            /// </summary>
-            /// <returns>A comma-separated list of edge representations.</returns>
-            public string EdgeString() => string.Join(", ", _edges.Select(e => e.ToString()));
+                // Sort points counterclockwise around centroid
+                return [.. points.OrderBy(p => Math.Atan2(p.Y - center.Y, p.X - center.X))];
+            }
         }
+
 
         /// <summary>
         /// Represents a triangle in 3D space, defined by three vertices or edges.
@@ -521,6 +560,9 @@
                 {
                     throw new ArgumentException("The given vertices do not form a valid triangle.");
                 }
+
+                // No need to triangulate a triangle!
+                _triangles = [this];
             }
 
             /// <summary>
@@ -759,6 +801,18 @@
         /// </summary>
         public class Quadrilateral : Face
         {
+            private Triangle _t1;
+            private Triangle _t2;
+
+            public Quadrilateral(Point3D a, Point3D b, Point3D c, Point3D d) : base([a, b, c, d])
+            {
+                if (Vertices.Count != 4)
+                {
+                    throw new ArgumentException("The given points do not form a valid quadrilateral.");
+                }
+                _t1 = new Triangle(a, b, c);
+                _t2 = new Triangle(a, c, d);
+            }
             /// <summary>
             /// Initializes a new instance of the <see cref="Quadrilateral"/> class using a list of four vertices.
             /// </summary>
@@ -770,6 +824,8 @@
                 {
                     throw new ArgumentException("A quadrilateral must contain exactly 4 vertices.");
                 }
+                _t1 = new(vertices[0], vertices[1], vertices[2]);
+                _t2 = new(vertices[0], vertices[2], vertices[3]);
             }
 
             /// <summary>
@@ -783,6 +839,8 @@
                 {
                     throw new ArgumentException("A quadrilateral must contain exactly 4 edges.");
                 }
+                _t1 = new([edges[0].A, edges[0].B, edges[1].B]);
+                _t2 = new([edges[0].A, edges[1].B, edges[2].B]);
             }
 
             /// <summary>
@@ -796,6 +854,8 @@
             {
                 if (!HaveTwoCommonPoints(triangle1, triangle2))
                     throw new ArgumentException("The given triangles must share exactly two common vertices.");
+                _t1 = triangle1;
+                _t2 = triangle2;
             }
 
             /// <summary>
@@ -809,7 +869,6 @@
                 var commonPoints = triangle1.Vertices.Intersect(triangle2.Vertices).ToList();
                 return commonPoints.Count == 2;
             }
-
             /// <summary>
             /// Extracts and orders unique vertices from two triangles to form a quadrilateral.
             /// </summary>
@@ -827,20 +886,13 @@
                 return OrderVertices(uniqueVertices);
             }
 
+            public Triangle T1 => _t1;
+            public Triangle T2 => _t2;
+
             /// <summary>
             /// Gets the area of the quadrilateral by dividing it into two triangles.
             /// </summary>
-            public double Area
-            {
-                get
-                {
-                    // Split the quadrilateral into two triangles
-                    Triangle t1 = new([Vertices[0], Vertices[1], Vertices[2]]);
-                    Triangle t2 = new([Vertices[0], Vertices[2], Vertices[3]]);
-
-                    return t1.Area + t2.Area;
-                }
-            }
+            public double Area => T1.Area + T2.Area;
 
             /// <summary>
             /// Gets the perimeter of the quadrilateral, which is the sum of its edge lengths.
@@ -896,7 +948,7 @@
             /// <param name="c">The third vertex.</param>
             /// <param name="d">The fourth vertex.</param>
             /// <exception cref="ArgumentException">Thrown if the given points do not form a valid rectangle.</exception>
-            public Rectangle(Point3D a, Point3D b, Point3D c, Point3D d) : base([a, b, c, d])
+            public Rectangle(Point3D a, Point3D b, Point3D c, Point3D d) : base(a, b, c, d)
             {
                 if (!IsValidRectangle())
                 {
@@ -998,6 +1050,13 @@
         /// </summary>
         public class Parallelogram : Quadrilateral
         {
+            public Parallelogram(Point3D a, Point3D b, Point3D c, Point3D d) : base(a, b, c, d)
+            {
+                if (!IsValidParallelogram())
+                {
+                    throw new ArgumentException("The given points do not form a valid parallelogram.");
+                }
+            }
             /// <summary>
             /// Initializes a new instance of the <see cref="Parallelogram"/> class using a list of four vertices.
             /// </summary>
@@ -1044,6 +1103,13 @@
         /// </summary>
         public class Rhombus : Parallelogram
         {
+            public Rhombus(Point3D a, Point3D b, Point3D c, Point3D d) : base(a, b, c, d)
+            {
+                if (!IsValidRhombus())
+                {
+                    throw new ArgumentException("The given points do not form a valid rhombus.");
+                }
+            }
             /// <summary>
             /// Initializes a new instance of the <see cref="Rhombus"/> class using a list of four vertices.
             /// </summary>
@@ -1093,6 +1159,13 @@
         /// </summary>
         public class Trapezoid : Quadrilateral
         {
+            public Trapezoid(Point3D a, Point3D b, Point3D c, Point3D d) : base(a, b, c, d)
+            {
+                if (!IsValidTrapezoid())
+                {
+                    throw new ArgumentException("The given points do not form a valid trapezoid.");
+                }
+            }
             /// <summary>
             /// Initializes a new instance of the <see cref="Trapezoid"/> class using a list of four vertices.
             /// </summary>
@@ -1137,6 +1210,13 @@
         /// </summary>
         public class Kite : Quadrilateral
         {
+            public Kite(Point3D a, Point3D b, Point3D c, Point3D d) : base(a, b, c, d)
+            {
+                if (!IsValidKite())
+                {
+                    throw new ArgumentException("The given points do not form a valid kite.");
+                }
+            }
             /// <summary>
             /// Initializes a new instance of the <see cref="Kite"/> class using a list of four vertices.
             /// </summary>

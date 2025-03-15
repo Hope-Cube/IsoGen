@@ -41,6 +41,8 @@ namespace IsoGen
             Console.WriteLine(r.ToString());
             Console.WriteLine(r.Area);
             Console.WriteLine(r.Perimeter);
+            Console.WriteLine(r.Triangles[0].Area);
+            Console.WriteLine(r.Triangles[1].Area);
 
             Point3D A1 = A;
             Point3D B1 = new(2, 2);
@@ -53,6 +55,21 @@ namespace IsoGen
             Console.WriteLine(s.ToString());
             Console.WriteLine(s.Area);
             Console.WriteLine(s.Perimeter);
+            Console.WriteLine(s.Triangles[0].Area);
+            Console.WriteLine(s.Triangles[1].Area);
+
+            Console.WriteLine("---Shape tests----");
+            Face shape = new(
+[
+    new Point3D(0, 0, 0),
+    new Point3D(4, 0, 0),
+    new Point3D(2, 2, 0),  // Concave inward point
+    new Point3D(4, 4, 0),
+    new Point3D(0, 4, 0)
+]);
+
+            Console.WriteLine($"Geometrical Center: {Point3D.GetCenter(shape.Vertices)}");
+            Console.WriteLine($"Center of Mass: {Point3D.GetCenterOfMass(shape.Vertices)}");
 
             //    // Save the drawn image to a file
             //    string filePath = "3DIsometricSpace.png";
