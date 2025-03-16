@@ -339,8 +339,6 @@ namespace IsoGen
 
                 _vertices = vertices;
                 _edges = ConvertToEdges(_vertices);
-
-                EnsureTriangulated();
             }
 
 
