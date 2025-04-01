@@ -6,19 +6,70 @@ namespace IsoGen
     {
         static void Main()
         {
-            Point3D point3D = new(1, 2, 0);
-            Point3D point3D2 = new(3, 4, 0);
+            Point3D A = new(2, 0);
+            Point3D B = new(2, 3);
+            Point3D C = new(0, 3);
+            Point3D D = new(0, 0);
 
-            Console.WriteLine(point3D.ToString() + "\n");
+            Console.WriteLine("------Points------");
+            Console.WriteLine(A.ToString());
+            Console.WriteLine(B.ToString());
+            Console.WriteLine(C.ToString());
+            Console.WriteLine(D.ToString());
 
-            Edge edge = new(point3D, point3D2);
+            Edge a = new(A, B);
+            Edge c = new(C, D);
 
-            Console.WriteLine(edge.ToString());
-            Console.WriteLine(edge.Length);
-            Console.WriteLine(edge.A);
-            Console.WriteLine(edge.B);
+            Console.WriteLine("------Edges-------");
+            Console.WriteLine(a.ToString());
+            Console.WriteLine(c.ToString());
 
-            Console.ReadKey();
+            Triangle t1 = new(A, B, C);
+            Triangle t2 = new(A, C, D);
+
+            Console.WriteLine("----Triangles-----");
+            Console.WriteLine(t1.ToString());
+            Console.WriteLine(t1.Area);
+            Console.WriteLine(t1.Perimeter + "\n");
+            Console.WriteLine(t2.ToString());
+            Console.WriteLine(t2.Area);
+            Console.WriteLine(t2.Perimeter);
+
+            Rectangle r = new(A, B, C, D);
+
+            Console.WriteLine("----Rectangle-----");
+            Console.WriteLine(r.ToString());
+            Console.WriteLine(r.Area);
+            Console.WriteLine(r.Perimeter);
+            Console.WriteLine(r.Triangles[0].Area);
+            Console.WriteLine(r.Triangles[1].Area);
+
+            Point3D A1 = A;
+            Point3D B1 = new(2, 2);
+            Point3D C1 = new(0, 2);
+            Point3D D1 = D;
+
+            Square s = new(A1, B1, C1, D1);
+
+            Console.WriteLine("------Square------");
+            Console.WriteLine(s.ToString());
+            Console.WriteLine(s.Area);
+            Console.WriteLine(s.Perimeter);
+            Console.WriteLine(s.Triangles[0].Area);
+            Console.WriteLine(s.Triangles[1].Area);
+
+            Console.WriteLine("---Shape tests----");
+            Face shape = new(
+[
+    new Point3D(0, 0, 0),
+    new Point3D(4, 0, 0),
+    new Point3D(2, 2, 0),  // Concave inward point
+    new Point3D(4, 4, 0),
+    new Point3D(0, 4, 0)
+]);
+
+            Console.WriteLine($"Geometrical Center: {Point3D.GetCenter(shape.Vertices)}");
+            Console.WriteLine($"Center of Mass: {Point3D.GetCenterOfMass(shape.Vertices)}");
 
             //    // Save the drawn image to a file
             //    string filePath = "3DIsometricSpace.png";
