@@ -5,11 +5,30 @@
         private const double Tolerance = 1e-6;
         public List<Point3D> Vertices { get; } = [];
         public List<Edge> Edges { get; } = [];
+        private List<Triangle>? _triangles;
+        public List<Triangle> Triangles
+        {
+            get
+            {
+                if (_triangles != null)
+                    return _triangles;
+
+                _triangles = [];
+                for (int i = 1; i < Vertices.Count - 1; i++)
+                {
+                    _triangles.Add(new Triangle(Vertices[0], Vertices[i], Vertices[i + 1]));
+                }
+
+                return _triangles;
+            }
+        }
         public int Count => Vertices.Count;
+        public double Perimeter { get; }
         public Vector3D Normal{ get; }
         public Point3D Centroid { get; set; }
         public Polygon(List<Point3D> vertices)
         {
+            vertices = [.. vertices.Distinct()];
             if (vertices.Count < 3)
                 throw new ArgumentException("Polygon must have at least 3 vertices.");
             if (!IsPlanar(vertices))
@@ -25,6 +44,7 @@
                 Edges.Add(new Edge(start, end));
             }
             Centroid = CompCentroid();
+            Perimeter = Edges.Sum(e => e.Length);
         }
         private bool IsPlanar(List<Point3D> vertices)
         {
@@ -67,12 +87,8 @@
 
             return new Vector3D(nx, ny, nz).Normalize();
         }
-        public static List<Point3D> OrderVertices(List<Point3D> vertices, Vector3D normal)
+        private static List<Point3D> OrderVertices(List<Point3D> vertices, Vector3D normal)
         {
-            if (vertices.Distinct().ToList().Count < 3)
-                throw new ArgumentException("Polygon must have at least 3 unique vertices.");
-
-            vertices = [.. vertices.Distinct()];
             var origin = vertices[0];
 
             // Create 2D basis vectors from the normal

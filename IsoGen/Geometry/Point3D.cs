@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents an immutable point in 3D space.
     /// </summary>
-    class Point3D(double x, double y, double z)
+    class Point3D(double x, double y, double z = 0)
     {
         /// <summary>
         /// The X-coordinate of the point.

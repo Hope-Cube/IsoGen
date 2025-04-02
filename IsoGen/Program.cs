@@ -1,4 +1,4 @@
-﻿using static IsoGen.Geometry;
+﻿using IsoGen.Geometry;
 
 namespace IsoGen
 {
@@ -35,7 +35,7 @@ namespace IsoGen
             Console.WriteLine(t2.Area);
             Console.WriteLine(t2.Perimeter);
 
-            Rectangle r = new(A, B, C, D);
+            /*Rectangle r = new(A, B, C, D);
 
             Console.WriteLine("----Rectangle-----");
             Console.WriteLine(r.ToString());
@@ -69,7 +69,7 @@ namespace IsoGen
 ]);
 
             Console.WriteLine($"Geometrical Center: {Point3D.GetCenter(shape.Vertices)}");
-            Console.WriteLine($"Center of Mass: {Point3D.GetCenterOfMass(shape.Vertices)}");
+            Console.WriteLine($"Center of Mass: {Point3D.GetCenterOfMass(shape.Vertices)}");*/
 
             //    // Save the drawn image to a file
             //    string filePath = "3DIsometricSpace.png";
