@@ -6,8 +6,8 @@ namespace IsoGen
     {
         static void Main()
         {
-            Point3D A = new(2, 0);
-            Point3D B = new(2, 3);
+            Point3D A = new(3, 0);
+            Point3D B = new(3, 3);
             Point3D C = new(0, 3);
             Point3D D = new(0, 0);
 
@@ -34,6 +34,8 @@ namespace IsoGen
             Console.WriteLine(t2.ToString());
             Console.WriteLine(t2.Area);
             Console.WriteLine(t2.Perimeter);
+
+            Console.ReadKey();
 
             /*Rectangle r = new(A, B, C, D);
 

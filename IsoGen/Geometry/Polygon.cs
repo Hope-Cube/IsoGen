@@ -46,7 +46,16 @@
             Centroid = CompCentroid();
             Perimeter = Edges.Sum(e => e.Length);
         }
-        private bool IsPlanar(List<Point3D> vertices)
+        public override string ToString()
+        {
+            var str = "";
+            foreach (var edge in Edges)
+            {
+                str += $"{edge}, ";
+            }
+            return str;
+        }
+        private static bool IsPlanar(List<Point3D> vertices)
         {
             var normal = CompNormal(vertices);
             var basePoint = vertices[0];
@@ -71,14 +80,14 @@
             double count = Count;
             return new Point3D(cx / count, cy / count, cz / count);
         }
-        private Vector3D CompNormal(List<Point3D> vertices)
+        private static Vector3D CompNormal(List<Point3D> vertices)
         {
             double nx = 0, ny = 0, nz = 0;
 
-            for (int i = 0; i < Count; i++)
+            for (int i = 0; i < vertices.Count; i++)
             {
                 var current = vertices[i];
-                var next = vertices[(i + 1) % Count];
+                var next = vertices[(i + 1) % vertices.Count];
 
                 nx += (current.Y - next.Y) * (current.Z + next.Z);
                 ny += (current.Z - next.Z) * (current.X + next.X);
