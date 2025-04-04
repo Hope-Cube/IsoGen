@@ -3,8 +3,11 @@
     /// <summary>
     /// Represents a finite, directed edge (line segment) between two 3D points.
     /// </summary>
-    class Edge(Point3D start, Point3D end)
+    public class Edge(Point3D start, Point3D end)
     {
+        /// <summary>
+        /// The tolerance for floating-point comparisons.
+        /// </summary>
         private const double Tolerance = 1e-6;
 
         /// <summary>
@@ -36,7 +39,7 @@
             get
             {
                 var d = Direction;
-                return Vector3D.Dot(d, d);
+                return d.Dot(d);
             }
         }
 
@@ -72,12 +75,12 @@
         {
             var ab = Direction;
             var ap = point - Start;
-            double abLengthSq = Vector3D.Dot(ab, ab);
+            double abLengthSq = ab.Dot(ab);
 
             if (abLengthSq < Tolerance * Tolerance)
                 throw new InvalidOperationException("Degenerate edge: zero length");
 
-            return Vector3D.Dot(ap, ab) / abLengthSq;
+            return ap.Dot(ab) / abLengthSq;
         }
 
         /// <summary>
@@ -93,8 +96,8 @@
             if (Vector3D.Cross(ab, ap).SquaredLength > Tolerance * Tolerance)
                 return false;
 
-            double dot = Vector3D.Dot(ab, ap);
-            double lenSq = Vector3D.Dot(ab, ab);
+            double dot = ab.Dot(ap);
+            double lenSq = ab.Dot(ab);
             return dot >= 0 && dot <= lenSq;
         }
 
@@ -108,12 +111,12 @@
         {
             var ab = Direction;
             var ap = point - Start;
-            double lenSq = Vector3D.Dot(ab, ab);
+            double lenSq = ab.Dot(ab);
 
             if (lenSq < Tolerance * Tolerance)
                 return Start; // Treat degenerate edge as a point
 
-            double t = Vector3D.Dot(ap, ab) / lenSq;
+            double t = ap.Dot(ab) / lenSq;
             t = Math.Clamp(t, 0.0, 1.0);
             return ParametricPoint(t);
         }

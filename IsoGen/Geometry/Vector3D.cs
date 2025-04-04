@@ -1,10 +1,18 @@
 ﻿namespace IsoGen.Geometry
 {
-    /// <summary>
+    /// <summary> 
     /// Represents an immutable 3D vector with standard vector operations.
     /// </summary>
-    class Vector3D(double x, double y, double z)
+    /// <remarks>
+    /// Initializes a new instance of the Vector3D class with specified x, y, and z components.
+    /// </remarks>
+    public class Vector3D(double x, double y, double z)
     {
+        /// <summary>
+        /// Tolerance for floating-point comparisons to avoid precision issues.
+        /// </summary>
+        private const double Tolerance = 1e-12;
+
         /// <summary>
         /// The X-component of the vector.
         /// </summary>
@@ -31,12 +39,11 @@
             0 => X,
             1 => Y,
             2 => Z,
-            _ => throw new IndexOutOfRangeException()
+            _ => throw new IndexOutOfRangeException("Index must be 0, 1, or 2.")
         };
 
         /// <summary>
-        /// Gets the squared length (magnitude) of the vector.
-        /// Faster than <see cref="Length"/> and suitable for comparisons.
+        /// Gets the squared length (magnitude) of the vector, which is faster to compute than the Euclidean length.
         /// </summary>
         public double SquaredLength => X * X + Y * Y + Z * Z;
 
@@ -53,7 +60,7 @@
         public Vector3D Normalize()
         {
             double lenSq = SquaredLength;
-            if (lenSq < 1e-12)
+            if (lenSq < Tolerance)
                 throw new InvalidOperationException("Cannot normalize a zero-length vector.");
 
             double invLen = 1.0 / Math.Sqrt(lenSq);
@@ -96,7 +103,7 @@
         /// <exception cref="DivideByZeroException">Thrown when scalar is zero or near-zero.</exception>
         public static Vector3D operator /(Vector3D v, double s)
         {
-            if (Math.Abs(s) < 1e-12)
+            if (Math.Abs(s) < Tolerance)
                 throw new DivideByZeroException("Cannot divide vector by zero.");
             return new(v.X / s, v.Y / s, v.Z / s);
         }
@@ -104,8 +111,10 @@
         /// <summary>
         /// Computes the dot product of two vectors.
         /// </summary>
-        public static double Dot(Vector3D a, Vector3D b) =>
-            a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        public double Dot(Vector3D other)
+        {
+            return X * other.X + Y * other.Y + Z * other.Z;
+        }
 
         /// <summary>
         /// Computes the cross product of two vectors.
