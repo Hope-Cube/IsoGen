@@ -23,9 +23,11 @@ namespace IsoGen
             Console.WriteLine("------Edges-------");
             Console.WriteLine(a.ToString());
             Console.WriteLine(c.ToString());
+            Console.WriteLine(a.Length);
+            Console.WriteLine(c.Length);
 
             Triangle t1 = new(A, B, C);
-            Triangle t2 = new(A, C, D);
+            Triangle t2 = new(C, D, A);
 
             Console.WriteLine("----Triangles-----");
             Console.WriteLine(t1.ToString());
@@ -34,8 +36,6 @@ namespace IsoGen
             Console.WriteLine(t2.ToString());
             Console.WriteLine(t2.Area);
             Console.WriteLine(t2.Perimeter);
-
-            Console.ReadKey();
 
             /*Rectangle r = new(A, B, C, D);
 
@@ -144,24 +144,21 @@ namespace IsoGen
             //    Console.WriteLine("3D isometric space image generated, centered, and opened.");
             //}
 
-            //// Overload for integer coordinates (used when drawing cubes)
-            //static Point ConvertToIsometric(int x, int y, int z, int tileWidth, int tileHeight, int heightFactor)
+                        //static Point ConvertToIsometric(int x, int y, int z, int tileWidth, int tileHeight, int heightFactor)
             //{
             //    int screenX = (x - z) * (tileWidth / 2);
             //    int screenY = (x + z) * (tileHeight / 2) - (y * heightFactor);
             //    return new Point(screenX, screenY);
             //}
 
-            //// Overload for double coordinates (used to compute the world’s center projection)
-            //static PointF ConvertToIsometric(double x, double y, double z, int tileWidth, int tileHeight, int heightFactor)
+                        //static PointF ConvertToIsometric(double x, double y, double z, int tileWidth, int tileHeight, int heightFactor)
             //{
             //    double screenX = (x - z) * (tileWidth / 2.0);
             //    double screenY = (x + z) * (tileHeight / 2.0) - (y * heightFactor);
             //    return new PointF((float)screenX, (float)screenY);
             //}
 
-            //// Draw a single cube (voxel) using isometric projection.
-            //static void DrawCube(Graphics g, int x, int y, int z,
+                        //static void DrawCube(Graphics g, int x, int y, int z,
             //             int tileWidth, int tileHeight, int heightFactor,
             //             int offsetX, int offsetY)
             //{

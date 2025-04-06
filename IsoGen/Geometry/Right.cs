@@ -1,43 +1,133 @@
 ﻿namespace IsoGen.Geometry
 {
     /// <summary>
-    /// Represents a right triangle defined by three vertices.
+    /// Represents a right triangle (one angle is 90 degrees).
+    /// Inherits from <see cref="Triangle"/> and exposes hypotenuse, legs, angles, and lengths.
     /// </summary>
     public class Right : Triangle
     {
         /// <summary>
-        /// Initializes a new instance of the Right class with individual points.
+        /// The height of the triangle, calculated as (LegA * LegB) / Hypotenuse.
         /// </summary>
-        /// <param name="p1">First vertex of the right triangle.</param>
-        /// <param name="p2">Second vertex of the right triangle.</param>
-        /// <param name="p3">Third vertex of the right triangle.</param>
+        public new double Height => (LegA.Length * LegB.Length) / Hypotenuse.Length;
+
+        /// <summary>
+        /// The angle of 90 degrees (π/2 radians).
+        /// </summary>
+        public double RightAngleRadians { get; } = Math.PI / 2;
+
+        /// <summary>
+        /// The angle of 90 degrees in degrees.
+        /// </summary>
+        public double RightAngleDegrees { get; } = 90.0;
+
+        /// <summary>
+        /// The acute angle adjacent to LegA, in radians.
+        /// </summary>
+        public double ALegAngleRadians { get; }
+
+        /// <summary>
+        /// The acute angle adjacent to LegA, in degrees.
+        /// </summary>
+        public double ALegAngleDegrees { get; }
+
+        /// <summary>
+        /// The acute angle adjacent to LegB, in radians.
+        /// </summary>
+        public double BLegAngleRadians { get; }
+
+        /// <summary>
+        /// The acute angle adjacent to LegB, in degrees.
+        /// </summary>
+        public double BLegAngleDegrees { get; }
+
+        /// <summary>
+        /// The vertex at which the right angle is located.
+        /// </summary>
+        public Point3D RightAngleVertex { get; }
+
+        /// <summary>
+        /// The side opposite the right angle — the longest side of the triangle.
+        /// </summary>
+        public Edge Hypotenuse { get; }
+
+        /// <summary>
+        /// One of the two shorter sides forming the right angle.
+        /// </summary>
+        public Edge LegA { get; }
+
+        /// <summary>
+        /// The other shorter side forming the right angle.
+        /// </summary>
+        public Edge LegB { get; }
+
+        /// <summary>
+        /// Creates a right triangle from three individual points.
+        /// </summary>
         public Right(Point3D p1, Point3D p2, Point3D p3)
             : this([p1, p2, p3]) { }
 
         /// <summary>
-        /// Initializes a new instance of the Right class with a list of vertices.
+        /// Creates a right triangle from a list of three vertices.
         /// </summary>
-        /// <param name="vertices">List of points defining the right triangle.</param>
+        /// <param name="vertices">The triangle's three vertices.</param>
+        /// <exception cref="ArgumentException">Thrown if the triangle is not right-angled.</exception>
         public Right(List<Point3D> vertices) : base(vertices)
         {
-            if (!IsRight())
-                throw new ArgumentException("Triangle must be right-angled.");
+            RightAngleVertex = FindRightAngleVertex()
+                ?? throw new ArgumentException("Triangle must be right-angled.");
+
+            RightAngleRadians = Math.PI / 2;
+            RightAngleDegrees = 90.0;
+
+            // Assign edges and angles depending on right-angle location
+            if (RightAngleVertex == APoint)
+            {
+                Hypotenuse = B;
+                LegA = C;
+                LegB = A;
+
+                ALegAngleRadians = AngleB;
+                BLegAngleRadians = AngleC;
+            }
+            else if (RightAngleVertex == BPoint)
+            {
+                Hypotenuse = C;
+                LegA = A;
+                LegB = B;
+
+                ALegAngleRadians = AngleC;
+                BLegAngleRadians = AngleA;
+            }
+            else // Right angle is at C
+            {
+                Hypotenuse = A;
+                LegA = B;
+                LegB = C;
+
+                ALegAngleRadians = AngleA;
+                BLegAngleRadians = AngleB;
+            }
+
+            ALegAngleDegrees = ALegAngleRadians * (180 / Math.PI);
+            BLegAngleDegrees = BLegAngleRadians * (180 / Math.PI);
         }
 
         /// <summary>
-        /// Checks if the triangle is a right triangle using the Pythagorean theorem.
+        /// Determines which vertex holds the 90-degree angle, if any.
         /// </summary>
-        /// <returns>True if the triangle is right-angled, otherwise false.</returns>
-        private bool IsRight()
+        private Point3D? FindRightAngleVertex()
         {
-            var sides = new List<double>
-        {
-            Vertices[0].DistanceTo(Vertices[1]),
-            Vertices[1].DistanceTo(Vertices[2]),
-            Vertices[2].DistanceTo(Vertices[0])
-        };
-            sides.Sort();
-            return Math.Abs(sides[0] * sides[0] + sides[1] * sides[1] - sides[2] * sides[2]) < Tolerance;
+            if (IsRightAngle(AngleA)) return APoint;
+            if (IsRightAngle(AngleB)) return BPoint;
+            if (IsRightAngle(AngleC)) return CPoint;
+            return null;
         }
+
+        /// <summary>
+        /// Checks if the given angle is approximately 90 degrees (π/2 radians).
+        /// </summary>
+        private static bool IsRightAngle(double angleRadians) =>
+            Math.Abs(angleRadians - Math.PI / 2) < Tolerance;
     }
 }

@@ -1,39 +1,35 @@
 ﻿namespace IsoGen.Geometry
 {
-    /// <summary> 
-    /// Represents an immutable 3D vector with standard vector operations.
+    /// <summary>
+    /// Represents a 3D vector with X, Y, and Z components.
+    /// Immutable and used for directions, displacements, and vector math.
     /// </summary>
-    /// <remarks>
-    /// Initializes a new instance of the Vector3D class with specified x, y, and z components.
-    /// </remarks>
-    public class Vector3D(double x, double y, double z)
+    public sealed class Vector3D(double x, double y, double z)
     {
-        /// <summary>
-        /// Tolerance for floating-point comparisons to avoid precision issues.
-        /// </summary>
         private const double Tolerance = 1e-12;
 
         /// <summary>
-        /// The X-component of the vector.
+        /// The X component of the vector.
         /// </summary>
-        public double X { get; set; } = x;
+        public double X { get; } = x;
 
         /// <summary>
-        /// The Y-component of the vector.
+        /// The Y component of the vector.
         /// </summary>
-        public double Y { get; set; } = y;
+        public double Y { get; } = y;
 
         /// <summary>
-        /// The Z-component of the vector.
+        /// The Z component of the vector.
         /// </summary>
-        public double Z { get; set; } = z;
+        public double Z { get; } = z;
 
         /// <summary>
-        /// Gets the component value by index (0 = X, 1 = Y, 2 = Z).
+        /// Gets the vector component at a specific index.
+        /// 0 = X, 1 = Y, 2 = Z.
         /// </summary>
-        /// <param name="index">The component index.</param>
-        /// <returns>The corresponding component value.</returns>
-        /// <exception cref="IndexOutOfRangeException">Thrown when index is not 0, 1, or 2.</exception>
+        /// <param name="index">The index of the component.</param>
+        /// <returns>The value of the component.</returns>
+        /// <exception cref="IndexOutOfRangeException">Thrown if index is not 0, 1, or 2.</exception>
         public double this[int index] => index switch
         {
             0 => X,
@@ -43,20 +39,21 @@
         };
 
         /// <summary>
-        /// Gets the squared length (magnitude) of the vector, which is faster to compute than the Euclidean length.
+        /// The squared length (magnitude) of the vector.
+        /// Faster to compute than <see cref="Length"/> because it avoids the square root.
         /// </summary>
         public double SquaredLength => X * X + Y * Y + Z * Z;
 
         /// <summary>
-        /// Gets the Euclidean length (magnitude) of the vector.
+        /// The length (magnitude) of the vector.
         /// </summary>
         public double Length => Math.Sqrt(SquaredLength);
 
         /// <summary>
         /// Returns a normalized (unit length) version of this vector.
         /// </summary>
-        /// <returns>The unit vector in the same direction.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when the vector has zero length.</exception>
+        /// <returns>The normalized vector.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the vector has near-zero length.</exception>
         public Vector3D Normalize()
         {
             double lenSq = SquaredLength;
@@ -74,33 +71,33 @@
             new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
         /// <summary>
-        /// Subtracts vector <paramref name="b"/> from <paramref name="a"/> component-wise.
+        /// Subtracts the second vector from the first, component-wise.
         /// </summary>
         public static Vector3D operator -(Vector3D a, Vector3D b) =>
             new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
         /// <summary>
-        /// Negates the vector (reverses its direction).
+        /// Returns the negation of the vector (flips direction).
         /// </summary>
         public static Vector3D operator -(Vector3D a) =>
             new(-a.X, -a.Y, -a.Z);
 
         /// <summary>
-        /// Multiplies the vector by a scalar.
+        /// Multiplies the vector by a scalar value.
         /// </summary>
         public static Vector3D operator *(Vector3D v, double s) =>
             new(v.X * s, v.Y * s, v.Z * s);
 
         /// <summary>
-        /// Multiplies the vector by a scalar (commutative overload).
+        /// Multiplies a scalar by a vector (same as vector * scalar).
         /// </summary>
         public static Vector3D operator *(double s, Vector3D v) =>
             v * s;
 
         /// <summary>
-        /// Divides the vector by a scalar.
+        /// Divides the vector by a scalar value.
         /// </summary>
-        /// <exception cref="DivideByZeroException">Thrown when scalar is zero or near-zero.</exception>
+        /// <exception cref="DivideByZeroException">Thrown if scalar is zero or too close to zero.</exception>
         public static Vector3D operator /(Vector3D v, double s)
         {
             if (Math.Abs(s) < Tolerance)
@@ -109,26 +106,30 @@
         }
 
         /// <summary>
-        /// Computes the dot product of two vectors.
+        /// Calculates the dot product between this vector and another.
         /// </summary>
+        /// <param name="other">The other vector.</param>
+        /// <returns>The dot product (a scalar value).</returns>
         public double Dot(Vector3D other)
         {
             return X * other.X + Y * other.Y + Z * other.Z;
         }
 
         /// <summary>
-        /// Computes the cross product of two vectors.
+        /// Calculates the cross product between this vector and another.
+        /// The result is a vector perpendicular to both.
         /// </summary>
-        /// <returns>A vector perpendicular to both <paramref name="a"/> and <paramref name="b"/>.</returns>
-        public static Vector3D Cross(Vector3D a, Vector3D b) =>
+        /// <param name="other">The other vector.</param>
+        /// <returns>The cross product vector.</returns>
+        public Vector3D Cross(Vector3D other) =>
             new(
-                a.Y * b.Z - a.Z * b.Y,
-                a.Z * b.X - a.X * b.Z,
-                a.X * b.Y - a.Y * b.X
+                Y * other.Z - Z * other.Y,
+                Z * other.X - X * other.Z,
+                X * other.Y - Y * other.X
             );
 
         /// <summary>
-        /// Returns a string representation of the vector.
+        /// Returns a string representation of the vector in the form (X, Y, Z).
         /// </summary>
         public override string ToString() => $"({X}, {Y}, {Z})";
     }

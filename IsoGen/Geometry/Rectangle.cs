@@ -1,24 +1,45 @@
 ﻿namespace IsoGen.Geometry
 {
     /// <summary>
-    /// Represents a rectangle with four vertices.
+    /// Represents a rectangle — a quadrilateral with four right angles and opposite sides equal.
+    /// Inherits from <see cref="Quadrilateral"/>.
     /// </summary>
     public class Rectangle : Quadrilateral
     {
         /// <summary>
-        /// Initializes a new instance of the Rectangle class with individual points.
+        /// The internal angle of all rectangle corners in radians (always π/2).
         /// </summary>
-        /// <param name="p1">First vertex of the rectangle.</param>
-        /// <param name="p2">Second vertex of the rectangle.</param>
-        /// <param name="p3">Third vertex of the rectangle.</param>
-        /// <param name="p4">Fourth vertex of the rectangle.</param>
+        public double AngleRadians => Math.PI / 2;
+
+        /// <summary>
+        /// The internal angle of all rectangle corners in degrees (always 90).
+        /// </summary>
+        public double AngleDegrees => 90.0;
+
+        /// <summary>
+        /// The edge between the first and second vertex.
+        /// </summary>
+        public new Edge A => Edges[0];
+
+        /// <summary>
+        /// The edge between the second and third vertex.
+        /// </summary>
+        public new Edge B => Edges[1];
+
+        /// <summary>
+        /// Creates a rectangle from four 3D points.
+        /// </summary>
         public Rectangle(Point3D p1, Point3D p2, Point3D p3, Point3D p4)
             : this([p1, p2, p3, p4]) { }
 
         /// <summary>
-        /// Initializes a new instance of the Rectangle class with a list of vertices.
+        /// Creates a rectangle from a list of four vertices.
+        /// Validates right angles and equal opposite sides.
         /// </summary>
-        /// <param name="vertices">List of points defining the rectangle.</param>
+        /// <param name="vertices">Four vertices defining the rectangle.</param>
+        /// <exception cref="ArgumentException">
+        /// Thrown if the number of vertices is not 4 or if the shape is not a valid rectangle.
+        /// </exception>
         public Rectangle(List<Point3D> vertices) : base(vertices)
         {
             if (vertices.Count != 4)
@@ -28,9 +49,8 @@
         }
 
         /// <summary>
-        /// Validates the rectangle by checking right angles and equal opposite sides.
+        /// Checks if the quadrilateral is a valid rectangle (right angles and equal opposite sides).
         /// </summary>
-        /// <returns>True if the rectangle is valid, otherwise false.</returns>
         private bool IsValid()
         {
             var v1 = Vertices[0] - Vertices[1];
@@ -38,28 +58,22 @@
             var v3 = Vertices[2] - Vertices[3];
             var v4 = Vertices[3] - Vertices[0];
 
-            return HasRightAngles(v1, v2, v3, v4) && HasEqualOppositeSides(v1, v2, v3, v4);
+            return HasRightAngles(v1, v2, v3, v4) &&
+                   HasEqualOppositeSides(v1, v2, v3, v4);
         }
 
         /// <summary>
-        /// Checks if the four vectors form right angles with each other.
+        /// Checks whether all corners of the quadrilateral are right angles using dot product.
         /// </summary>
-        /// <param name="v1">Vector from vertex 1 to vertex 2.</param>
-        /// <param name="v2">Vector from vertex 2 to vertex 3.</param>
-        /// <param name="v3">Vector from vertex 3 to vertex 4.</param>
-        /// <param name="v4">Vector from vertex 4 to vertex 1.</param>
-        /// <returns>True if all angles are right angles, otherwise false.</returns>
-        private static bool HasRightAngles(Vector3D v1, Vector3D v2, Vector3D v3, Vector3D v4)
-            => v1.Dot(v2) == 0 && v2.Dot(v3) == 0 && v3.Dot(v4) == 0 && v4.Dot(v1) == 0;
+        private static bool HasRightAngles(Vector3D v1, Vector3D v2, Vector3D v3, Vector3D v4) =>
+            Math.Abs(v1.Dot(v2)) < Tolerance &&
+            Math.Abs(v2.Dot(v3)) < Tolerance &&
+            Math.Abs(v3.Dot(v4)) < Tolerance &&
+            Math.Abs(v4.Dot(v1)) < Tolerance;
 
         /// <summary>
-        /// Checks if opposite sides of the rectangle are of equal length.
+        /// Checks whether opposite sides of the rectangle are equal in length.
         /// </summary>
-        /// <param name="v1">Vector from vertex 1 to vertex 2.</param>
-        /// <param name="v2">Vector from vertex 2 to vertex 3.</param>
-        /// <param name="v3">Vector from vertex 3 to vertex 4.</param>
-        /// <param name="v4">Vector from vertex 4 to vertex 1.</param>
-        /// <returns>True if opposite sides are equal in length, otherwise false.</returns>
         private static bool HasEqualOppositeSides(Vector3D v1, Vector3D v2, Vector3D v3, Vector3D v4)
         {
             double length1 = v1.Length;
@@ -67,7 +81,8 @@
             double length3 = v3.Length;
             double length4 = v4.Length;
 
-            return (Math.Abs(length1 - length3) < Tolerance) && (Math.Abs(length2 - length4) < Tolerance);
+            return Math.Abs(length1 - length3) < Tolerance &&
+                   Math.Abs(length2 - length4) < Tolerance;
         }
     }
 }

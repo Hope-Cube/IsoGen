@@ -1,19 +1,31 @@
 ﻿namespace IsoGen.Geometry
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
     /// <summary>
-    /// Represents a polygon defined by a list of 3D vertices.
+    /// Represents a general planar polygon in 3D space.
     /// </summary>
     public class Polygon
     {
+        /// <summary>
+        /// Tolerance used for floating-point comparisons.
+        /// </summary>
         internal const double Tolerance = 1e-6;
+
+        /// <summary>
+        /// The ordered list of vertices defining the polygon.
+        /// </summary>
         public List<Point3D> Vertices { get; }
+
+        /// <summary>
+        /// The list of edges forming the polygon.
+        /// </summary>
         public List<Edge> Edges { get; }
+
         private List<Triangle> _triangles = [];
 
+        /// <summary>
+        /// The list of triangles formed by naive fan triangulation.
+        /// Only computed once on demand.
+        /// </summary>
         public List<Triangle> Triangles
         {
             get
@@ -30,25 +42,43 @@
             }
         }
 
+        /// <summary>
+        /// The number of vertices in the polygon.
+        /// </summary>
         public int Count => Vertices.Count;
+
+        /// <summary>
+        /// The perimeter (total edge length) of the polygon.
+        /// </summary>
         public double Perimeter { get; }
+
+        /// <summary>
+        /// The surface normal of the polygon, computed from vertex winding.
+        /// </summary>
         public Vector3D Normal { get; }
+
+        /// <summary>
+        /// The centroid (average position) of all vertices.
+        /// </summary>
         public Point3D Centroid { get; set; }
 
+        /// <summary>
+        /// Creates a planar polygon from a list of 3D vertices.
+        /// </summary>
+        /// <param name="vertices">The input vertices. Must be at least 3 and lie on the same plane.</param>
+        /// <exception cref="ArgumentException">Thrown if vertices are not distinct, not enough, or not planar.</exception>
         public Polygon(List<Point3D> vertices)
         {
-            if (vertices.Count < 3)
-                throw new ArgumentException("Polygon must have at least 3 vertices.");
-
             Vertices = [.. vertices.Distinct()];
             if (Vertices.Count < 3)
                 throw new ArgumentException("Polygon must have at least 3 distinct vertices.");
 
             Normal = ComputeNormal(Vertices);
-            if (!IsPlanar(Vertices))
+            if (!IsPlanar(Vertices, Normal))
                 throw new ArgumentException("Polygon is not planar.");
 
             Vertices = OrderVertices(Vertices, Normal);
+
             Edges = [];
             for (int i = 0; i < Vertices.Count; i++)
             {
@@ -61,18 +91,24 @@
             Perimeter = Edges.Sum(e => e.Length);
         }
 
-        public override string ToString()
-        {
-            return string.Join(", ", Edges.Select(e => e.ToString()));
-        }
+        /// <summary>
+        /// Returns a string listing all the edges.
+        /// </summary>
+        public override string ToString() =>
+            string.Join(", ", Edges.Select(e => e.ToString()));
 
-        private static bool IsPlanar(List<Point3D> vertices)
+        /// <summary>
+        /// Checks whether all points lie on the same plane using dot product with the polygon's normal.
+        /// </summary>
+        private static bool IsPlanar(List<Point3D> vertices, Vector3D normal)
         {
-            var normal = ComputeNormal(vertices);
             var basePoint = vertices[0];
             return vertices.All(vertex => Math.Abs(normal.Dot(vertex - basePoint)) <= Tolerance);
         }
 
+        /// <summary>
+        /// Computes the centroid (average of all vertex positions).
+        /// </summary>
         private Point3D ComputeCentroid()
         {
             double cx = 0, cy = 0, cz = 0;
@@ -82,10 +118,12 @@
                 cy += p.Y;
                 cz += p.Z;
             }
-
             return new Point3D(cx / Count, cy / Count, cz / Count);
         }
 
+        /// <summary>
+        /// Computes the polygon's surface normal using Newell’s method.
+        /// </summary>
         private static Vector3D ComputeNormal(List<Point3D> vertices)
         {
             double nx = 0, ny = 0, nz = 0;
@@ -100,14 +138,17 @@
             return new Vector3D(nx, ny, nz).Normalize();
         }
 
+        /// <summary>
+        /// Reorders vertices to ensure consistent winding order around the normal vector.
+        /// </summary>
         private static List<Point3D> OrderVertices(List<Point3D> vertices, Vector3D normal)
         {
             var origin = vertices[0];
-            var u = Vector3D.Cross(normal, new Vector3D(0, 0, 1));
+            var u = normal.Cross(new Vector3D(0, 0, 1));
             if (u.SquaredLength < Tolerance)
-                u = Vector3D.Cross(normal, new Vector3D(0, 1, 0));
+                u = normal.Cross(new Vector3D(0, 1, 0));
             u = u.Normalize();
-            var v = Vector3D.Cross(normal, u).Normalize();
+            var v = normal.Cross(u).Normalize();
 
             return [.. vertices.OrderBy(p =>
             {
