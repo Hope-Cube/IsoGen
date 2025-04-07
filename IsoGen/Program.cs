@@ -12,41 +12,22 @@ namespace IsoGen
             Point3D D = new(0, 0);
 
             Console.WriteLine("------Points------");
-            Console.WriteLine(A.ToString());
-            Console.WriteLine(B.ToString());
-            Console.WriteLine(C.ToString());
-            Console.WriteLine(D.ToString());
+            Console.WriteLine(A);
+            Console.WriteLine(B);
+            Console.WriteLine(C);
+            Console.WriteLine(D);
 
-            Edge a = new(A, B);
-            Edge c = new(C, D);
-
-            Console.WriteLine("------Edges-------");
-            Console.WriteLine(a.ToString());
-            Console.WriteLine(c.ToString());
-            Console.WriteLine(a.Length);
-            Console.WriteLine(c.Length);
-
-            Triangle t1 = new(A, B, C);
-            Triangle t2 = new(C, D, A);
-
-            Console.WriteLine("----Triangles-----");
-            Console.WriteLine(t1.ToString());
-            Console.WriteLine(t1.Area);
-            Console.WriteLine(t1.Perimeter + "\n");
-            Console.WriteLine(t2.ToString());
-            Console.WriteLine(t2.Area);
-            Console.WriteLine(t2.Perimeter);
-
-            /*Rectangle r = new(A, B, C, D);
+            Rectangle r = new(A, B, C, D);
+            r.Triangulate();
 
             Console.WriteLine("----Rectangle-----");
-            Console.WriteLine(r.ToString());
+            Console.WriteLine(r);
             Console.WriteLine(r.Area);
             Console.WriteLine(r.Perimeter);
             Console.WriteLine(r.Triangles[0].Area);
             Console.WriteLine(r.Triangles[1].Area);
 
-            Point3D A1 = A;
+            /*Point3D A1 = A;
             Point3D B1 = new(2, 2);
             Point3D C1 = new(0, 2);
             Point3D D1 = D;

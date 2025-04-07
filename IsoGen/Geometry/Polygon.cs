@@ -77,6 +77,8 @@
             if (!IsPlanar(Vertices, Normal))
                 throw new ArgumentException("Polygon is not planar.");
 
+
+            Centroid = ComputeCentroid();
             Vertices = OrderVertices(Vertices, Normal);
 
             Edges = [];
@@ -87,7 +89,6 @@
                 Edges.Add(new Edge(start, end));
             }
 
-            Centroid = ComputeCentroid();
             Perimeter = Edges.Sum(e => e.Length);
         }
 
@@ -139,24 +140,25 @@
         }
 
         /// <summary>
-        /// Reorders vertices to ensure consistent winding order around the normal vector.
+        /// Orders the vertices of a planar polygon in counter-clockwise order
+        /// around the given centroid, using the polygon’s normal vector.
         /// </summary>
-        private static List<Point3D> OrderVertices(List<Point3D> vertices, Vector3D normal)
+        /// <param name="vertices">The polygon’s vertices (must be planar).</param>
+        /// <param name="normal">The normal vector of the polygon.</param>
+        /// <returns>A new list of points sorted counter-clockwise.</returns>
+        public List<Point3D> OrderVertices(List<Point3D> vertices, Vector3D normal)
         {
-            var origin = vertices[0];
-            var u = normal.Cross(new Vector3D(0, 0, 1));
-            if (u.SquaredLength < Tolerance)
-                u = normal.Cross(new Vector3D(0, 1, 0));
-            u = u.Normalize();
-            var v = normal.Cross(u).Normalize();
+            var reference = Centroid - vertices[0];
 
-            return [.. vertices.OrderBy(p =>
-            {
-                var relative = p - origin;
-                double x = relative.Dot(u);
-                double y = relative.Dot(v);
-                return Math.Atan2(y, x);
-            })];
+            return [.. vertices
+                .OrderBy(p =>
+                {
+                    var v = p - Centroid;
+                    return Math.Atan2(
+                        normal.Dot(reference.Cross(v)),  // signed area (direction)
+                        reference.Dot(v)                 // cosine angle
+                    );
+                })];
         }
     }
 }

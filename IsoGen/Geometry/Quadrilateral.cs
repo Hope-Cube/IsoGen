@@ -6,6 +6,7 @@
     /// </summary>
     public class Quadrilateral : Polygon
     {
+        public double Area { get; }
         /// <summary>
         /// The angle between diagonal AC and side A (AB), in radians.
         /// </summary>
@@ -74,11 +75,9 @@
         /// Splits the quadrilateral into two triangles using diagonal AC.
         /// </summary>
         /// <returns>A list containing two triangles: ABC and ACD.</returns>
-        public List<Triangle> Triangulate()
+        public void Triangulate()
         {
-            var triangle1 = new Triangle(APoint, BPoint, CPoint);
-            var triangle2 = new Triangle(APoint, CPoint, DPoint);
-            return [triangle1, triangle2];
+            Triangles.AddRange([new Triangle(APoint, BPoint, CPoint), new Triangle(APoint, CPoint, DPoint)]);
         }
 
         /// <summary>
@@ -154,6 +153,8 @@
 
             DiagonalAC = new Edge(APoint, CPoint);
             DiagonalBD = new Edge(BPoint, DPoint);
+
+            Area = new Triangle(APoint, BPoint, CPoint).Area + new Triangle(APoint, CPoint, DPoint).Area;
         }
     }
 }

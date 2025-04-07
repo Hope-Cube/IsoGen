@@ -9,12 +9,12 @@
         /// <summary>
         /// The internal angle of all rectangle corners in radians (always π/2).
         /// </summary>
-        public double AngleRadians => Math.PI / 2;
+        public static double AngleRadians => Math.PI / 2;
 
         /// <summary>
         /// The internal angle of all rectangle corners in degrees (always 90).
         /// </summary>
-        public double AngleDegrees => 90.0;
+        public static double AngleDegrees => 90.0;
 
         /// <summary>
         /// The edge between the first and second vertex.

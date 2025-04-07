@@ -14,12 +14,12 @@
         /// <summary>
         /// The angle between a side and its diagonal, in radians (always π/4).
         /// </summary>
-        public double DiagonalAngleRadians => Math.PI / 4;
+        public static double DiagonalAngleRadians => Math.PI / 4;
 
         /// <summary>
         /// The angle between a side and its diagonal, in degrees (always 45).
         /// </summary>
-        public double DiagonalAngleDegrees => 45.0;
+        public static double DiagonalAngleDegrees => 45.0;
 
         /// <summary>
         /// Creates a square from four 3D points.
