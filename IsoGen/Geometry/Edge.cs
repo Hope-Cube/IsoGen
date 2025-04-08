@@ -3,10 +3,18 @@
     /// <summary>
     /// Represents a line segment in 3D space defined by two points: a start and an end.
     /// </summary>
-    public sealed class Edge(Point3D start, Point3D end)
+    public sealed class Edge(Point3D start, Point3D end, Edge.EndType endType = Edge.EndType.None)
     {
         private const double Tolerance = 1e-6;
 
+        public static double Width { get; set; }
+
+        private double EndSize { get; set; } = 2 * Width;
+        public enum EndType
+        {
+            None,
+            Circle
+        }
         /// <summary>
         /// The starting point of the edge.
         /// </summary>
