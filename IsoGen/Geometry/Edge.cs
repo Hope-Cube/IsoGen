@@ -1,20 +1,14 @@
-﻿namespace IsoGen.Geometry
+﻿using System.Drawing;
+
+namespace IsoGen.Geometry
 {
     /// <summary>
     /// Represents a line segment in 3D space defined by two points: a start and an end.
     /// </summary>
-    public sealed class Edge(Point3D start, Point3D end, Edge.EndType endType = Edge.EndType.None)
+    public sealed class Edge(Point3D start, Point3D end, double width = 1)
     {
         private const double Tolerance = 1e-6;
 
-        public static double Width { get; set; }
-
-        private double EndSize { get; set; } = 2 * Width;
-        public enum EndType
-        {
-            None,
-            Circle
-        }
         /// <summary>
         /// The starting point of the edge.
         /// </summary>
@@ -24,6 +18,8 @@
         /// The ending point of the edge.
         /// </summary>
         public Point3D End { get; } = end;
+
+        public double Width { get; set; } = width;
 
         /// <summary>
         /// A vector representing the direction and length from Start to End.
@@ -121,6 +117,81 @@
             double t = ap.Dot(ab) / abLenSq;
             t = Math.Clamp(t, 0.0, 1.0);
             return ParametricPoint(t);
+        }
+
+        public enum LineType
+        {
+            Solid,
+            Dashed,
+            Dotted
+        }
+
+        public static List<Point> CreateStyledLine(Point p1, Point p2, LineType type)
+        {
+            List<int> pattern = type switch
+            {
+                LineType.Solid => [1],
+                LineType.Dashed => [4, 2],
+                LineType.Dotted => [1, 2],
+                _ => [1]
+            };
+
+            var line = new List<Point>();
+
+            int x = p1.X;
+            int y = p1.Y;
+
+            int dx = Math.Abs(p2.X - p1.X);
+            int dy = Math.Abs(p2.Y - p1.Y);
+            int s1 = Math.Sign(p2.X - p1.X);
+            int s2 = Math.Sign(p2.Y - p1.Y);
+            bool interchange = dy > dx;
+
+            if (interchange)
+                (dx, dy) = (dy, dx);
+
+            int error = 2 * dy - dx;
+            int A = 2 * dy;
+            int B = 2 * dy - 2 * dx;
+
+            int patternIndex = 0;
+            int patternCount = 0;
+            bool draw = true;
+
+            void AdvancePattern()
+            {
+                patternCount++;
+                if (patternCount >= pattern[patternIndex])
+                {
+                    patternCount = 0;
+                    patternIndex = (patternIndex + 1) % pattern.Count;
+                    draw = !draw;
+                }
+            }
+
+            if (draw) line.Add(new Point(x, y));
+            AdvancePattern();
+
+            for (int i = 1; i < dx; i++)
+            {
+                if (error < 0)
+                {
+                    if (interchange) y += s2;
+                    else x += s1;
+                    error += A;
+                }
+                else
+                {
+                    y += s2;
+                    x += s1;
+                    error += B;
+                }
+
+                if (draw) line.Add(new Point(x, y));
+                AdvancePattern();
+            }
+
+            return line;
         }
 
         /// <summary>

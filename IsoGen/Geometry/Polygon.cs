@@ -86,7 +86,7 @@
             {
                 var start = Vertices[i];
                 var end = Vertices[(i + 1) % Vertices.Count];
-                Edges.Add(new Edge(start, end));
+                Edges.Add(new Edge(start, end,));
             }
 
             Perimeter = Edges.Sum(e => e.Length);

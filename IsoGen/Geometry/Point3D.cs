@@ -1,10 +1,27 @@
 ﻿namespace IsoGen.Geometry
 {
+    public enum Type
+    {
+        None,
+        Point,
+        Square
+    }
+
     /// <summary>
     /// Represents a point in 3D space using X, Y, and Z coordinates.
     /// </summary>
-    public sealed class Point3D(double x, double y, double z = 0)
+    public sealed class Point3D(double x, double y, double z = 0, Type type = Type.None, double size = 1)
     {
+        /// <summary>
+        /// The type of point (e.g. None, Point, Square, Arrow).
+        /// </summary>
+        public Type Type { get; set; } = type;
+
+        /// <summary>
+        /// The size of the point, used for rendering or arrow length.
+        /// </summary>
+        public double Size { get; set; } = size;
+
         /// <summary>
         /// The X-coordinate of the point.
         /// </summary>
