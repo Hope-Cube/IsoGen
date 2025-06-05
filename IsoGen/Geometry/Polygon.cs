@@ -37,7 +37,7 @@ namespace IsoGen.Geometry
         public Polygon(IEnumerable<Point3D> points)
         {
             // Remove duplicate points using Distinct()
-            Vertices = points.Distinct().ToList();
+            Vertices = [.. points.Distinct()];
 
             // Check that we have at least three unique points
             if (Vertices.Count < 3)
@@ -173,7 +173,7 @@ namespace IsoGen.Geometry
                 return; // Nothing to order if fewer than 3 points
 
             // Compute centroid of all vertices
-            Point3D centroid = new Point3D(
+            Point3D centroid = new(
                 Vertices.Average(p => p.X),
                 Vertices.Average(p => p.Y),
                 Vertices.Average(p => p.Z)
@@ -206,7 +206,7 @@ namespace IsoGen.Geometry
             angles.Sort((a, b) => a.angle.CompareTo(b.angle));
 
             // Update the Vertices list to the new ordered sequence
-            Vertices = angles.Select(tuple => tuple.point).ToList();
+            Vertices = [.. angles.Select(tuple => tuple.point)];
         }
 
         /// <summary>
