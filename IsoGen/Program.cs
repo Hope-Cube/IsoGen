@@ -6,26 +6,16 @@ namespace IsoGen
     {
         static void Main()
         {
-            Point3D A = new(3, 0);
-            Point3D B = new(3, 3);
-            Point3D C = new(0, 3);
-            Point3D D = new(0, 0);
+            Point3D A = new(1, 0, 0);
+            Point3D B = new(0, 1, 0);
+            Point3D C = new(1, 1, 0);
+            Point3D D = new(0, 0, 0);
 
             Console.WriteLine("------Points------");
             Console.WriteLine(A);
             Console.WriteLine(B);
             Console.WriteLine(C);
             Console.WriteLine(D);
-
-            Rectangle r = new(A, B, C, D);
-            r.Triangulate();
-
-            Console.WriteLine("----Rectangle-----");
-            Console.WriteLine(r);
-            Console.WriteLine(r.Area);
-            Console.WriteLine(r.Perimeter);
-            Console.WriteLine(r.Triangles[0].Area);
-            Console.WriteLine(r.Triangles[1].Area);
 
             /*Point3D A1 = A;
             Point3D B1 = new(2, 2);

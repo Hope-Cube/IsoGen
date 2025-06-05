@@ -1,202 +1,145 @@
-﻿using System.Drawing;
-
-namespace IsoGen.Geometry
+﻿namespace IsoGen.Geometry
 {
     /// <summary>
-    /// Represents a line segment in 3D space defined by two points: a start and an end.
+    /// Represents a directed edge (line segment) in 3D space from point A to point B.
     /// </summary>
-    public sealed class Edge(Point3D start, Point3D end, double width = 1)
+    public struct Edge
     {
-        private const double Tolerance = 1e-6;
+        /// <summary>The starting point of the edge.</summary>
+        public Point3D A;
+
+        /// <summary>The ending point of the edge.</summary>
+        public Point3D B;
 
         /// <summary>
-        /// The starting point of the edge.
+        /// Gets the vector pointing from point A to point B.
         /// </summary>
-        public Point3D Start { get; } = start;
+        public readonly Vector3D Vector => B - A;
 
         /// <summary>
-        /// The ending point of the edge.
+        /// Gets the direction of the edge as a unit vector.
         /// </summary>
-        public Point3D End { get; } = end;
-
-        public double Width { get; set; } = width;
+        public readonly Vector3D Direction => Vector.Normalized();
 
         /// <summary>
-        /// A vector representing the direction and length from Start to End.
+        /// Gets the length of the edge (distance between A and B).
         /// </summary>
-        public Vector3D Direction => End - Start;
+        public readonly double Length => A.DistanceTo(B);
 
         /// <summary>
-        /// The length of the edge.
+        /// Gets the squared length of the edge (avoids the square root for efficiency).
         /// </summary>
-        public double Length => Start.DistanceTo(End);
+        public readonly double SquaredLength => A.SquaredDistanceTo(B);
+
+        private Vector3D? _normal;
 
         /// <summary>
-        /// The squared length of the edge. Useful for comparison without taking a square root.
+        /// Gets or sets the normal vector associated with this edge.
+        /// Initially computed as perpendicular to the edge and facing +Z.
+        /// Can be manually overridden using <see cref="SetNormal"/>.
         /// </summary>
-        public double SquaredLength
+        public Vector3D Normal
         {
-            get
+            readonly get
             {
-                var d = Direction;
-                return d.Dot(d);
+                if (_normal.HasValue) return _normal.Value;
+                // Default: perpendicular to edge in XY plane, facing +Z
+                Vector3D zUp = new(0, 0, 1);
+                Vector3D defaultNormal = Vector.Cross(zUp).Normalized();
+                return defaultNormal;
             }
+            set => _normal = value;
         }
 
         /// <summary>
-        /// The point exactly halfway between Start and End.
+        /// Constructs a new edge and automatically sets endpoint normals.
+        /// A gets the edge direction, B gets the opposite.
         /// </summary>
-        public Point3D Midpoint => Start + Direction * 0.5;
-
-        /// <summary>
-        /// True if the Start and End points are the same (zero-length edge).
-        /// </summary>
-        public bool IsDegenerate => Start == End;
-
-        /// <summary>
-        /// Returns a new edge with Start and End swapped.
-        /// </summary>
-        public Edge Reversed => new(End, Start);
-
-        /// <summary>
-        /// Gets a point along the edge based on a parameter t between 0 and 1.
-        /// t = 0 gives Start, t = 1 gives End, 0.5 gives the midpoint, etc.
-        /// </summary>
-        /// <param name="t">A value between 0 and 1 indicating the position on the edge.</param>
-        public Point3D ParametricPoint(double t) => Start + Direction * t;
-
-        /// <summary>
-        /// Computes the parameter t corresponding to the given point projected onto the edge.
-        /// </summary>
-        /// <param name="point">A point near or on the edge.</param>
-        /// <returns>The parametric value t such that ParametricPoint(t) is closest to the given point.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the edge is degenerate (zero length).</exception>
-        public double ParametricT(Point3D point)
+        public Edge(Point3D a, Point3D b)
         {
-            var direction = Direction;
-            double abLenSq = direction.Dot(direction);
-
-            if (abLenSq < Tolerance * Tolerance)
-                throw new InvalidOperationException("Degenerate edge: zero length");
-
-            return (point - Start).Dot(direction) / abLenSq;
+            A = a;
+            B = b;
+            _normal = null;
+            A.SetNormal(Direction);
+            B.SetNormal(-Direction);
         }
 
         /// <summary>
-        /// Checks whether the edge contains the given point (lies on the segment, not just the line).
+        /// Overrides the normal vector with a custom one.
         /// </summary>
-        /// <param name="point">The point to check.</param>
-        /// <returns>True if the point lies on the edge segment; false otherwise.</returns>
-        public bool Contains(Point3D point)
-        {
-            var ab = Direction;
-            var ap = point - Start;
-
-            if (ab.Cross(ap).SquaredLength > Tolerance * Tolerance)
-                return false;
-
-            double dot = ab.Dot(ap);
-            double abLenSq = ab.Dot(ab); // cache it once
-            return dot >= 0 && dot <= abLenSq;
-        }
+        public void SetNormal(Vector3D customNormal) => _normal = customNormal;
 
         /// <summary>
-        /// Returns the closest point on the edge to a given external point.
+        /// Returns a string representation of this edge in the form "(A -> B)".
         /// </summary>
-        /// <param name="point">The external point.</param>
-        /// <returns>The closest point on the edge.</returns>
-        public Point3D ClosestPoint(Point3D point)
+        public override readonly string ToString() => $"({A} -> {B})";
+
+        /// <summary>
+        /// Divides this edge into evenly spaced points between A and B.
+        /// </summary>
+        /// <param name="segments">The number of segments to divide the edge into.</param>
+        /// <param name="includeEndpoints">
+        /// Whether to include the start point (A) and end point (B) in the returned list.
+        /// </param>
+        /// <returns>
+        /// A list of <see cref="Point3D"/> spaced evenly along the edge.
+        /// If <paramref name="segments"/> is less than 1, returns an empty list (or [A, B] if endpoints included).
+        /// </returns>
+        public readonly List<Point3D> Divide(int segments, bool includeEndpoints = false)
         {
-            var ab = Direction;
-            var ap = point - Start;
-            double abLenSq = ab.Dot(ab);
-
-            if (abLenSq < Tolerance * Tolerance)
-                return Start; // Treat degenerate edge as a point
-
-            double t = ap.Dot(ab) / abLenSq;
-            t = Math.Clamp(t, 0.0, 1.0);
-            return ParametricPoint(t);
-        }
-
-        public enum LineType
-        {
-            Solid,
-            Dashed,
-            Dotted
-        }
-
-        public static List<Point> CreateStyledLine(Point p1, Point p2, LineType type)
-        {
-            List<int> pattern = type switch
+            List<Point3D> points = [];
+            if (segments < 1)
             {
-                LineType.Solid => [1],
-                LineType.Dashed => [4, 2],
-                LineType.Dotted => [1, 2],
-                _ => [1]
-            };
-
-            var line = new List<Point>();
-
-            int x = p1.X;
-            int y = p1.Y;
-
-            int dx = Math.Abs(p2.X - p1.X);
-            int dy = Math.Abs(p2.Y - p1.Y);
-            int s1 = Math.Sign(p2.X - p1.X);
-            int s2 = Math.Sign(p2.Y - p1.Y);
-            bool interchange = dy > dx;
-
-            if (interchange)
-                (dx, dy) = (dy, dx);
-
-            int error = 2 * dy - dx;
-            int A = 2 * dy;
-            int B = 2 * dy - 2 * dx;
-
-            int patternIndex = 0;
-            int patternCount = 0;
-            bool draw = true;
-
-            void AdvancePattern()
-            {
-                patternCount++;
-                if (patternCount >= pattern[patternIndex])
+                if (includeEndpoints)
                 {
-                    patternCount = 0;
-                    patternIndex = (patternIndex + 1) % pattern.Count;
-                    draw = !draw;
+                    points.Add(A);
+                    points.Add(B);
                 }
+                return points;
             }
 
-            if (draw) line.Add(new Point(x, y));
-            AdvancePattern();
+            if (includeEndpoints)
+                points.Add(A);
 
-            for (int i = 1; i < dx; i++)
-            {
-                if (error < 0)
-                {
-                    if (interchange) y += s2;
-                    else x += s1;
-                    error += A;
-                }
-                else
-                {
-                    y += s2;
-                    x += s1;
-                    error += B;
-                }
+            Vector3D step = Vector / (segments + 1);
+            for (int i = 1; i <= segments; i++)
+                points.Add(A + step * i);
 
-                if (draw) line.Add(new Point(x, y));
-                AdvancePattern();
-            }
+            if (includeEndpoints)
+                points.Add(B);
 
-            return line;
+            return points;
         }
 
         /// <summary>
-        /// Returns a string showing the start and end points of the edge.
+        /// Determines whether this edge is exactly equal to another edge (same A and same B).
         /// </summary>
-        public override string ToString() => $"({Start} => {End})";
+        public static bool operator ==(Edge a, Edge b) => a.A == b.A && a.B == b.B;
+
+        /// <summary>
+        /// Determines whether this edge differs from another edge.
+        /// </summary>
+        public static bool operator !=(Edge a, Edge b) => !(a == b);
+
+        /// <summary>
+        /// Returns true if this edge has the same points (in the same direction) as another object.
+        /// </summary>
+        public override readonly bool Equals(object? obj) => obj is Edge e && this == e;
+
+        /// <summary>
+        /// Returns a hash code based on the two endpoints.
+        /// </summary>
+        public override readonly int GetHashCode() => HashCode.Combine(A, B);
+
+        /// <summary>
+        /// Returns true if this edge has the same points as another edge, regardless of direction.
+        /// </summary>
+        public readonly bool EqualsUndirected(Edge other) =>
+            (A == other.A && B == other.B) || (A == other.B && B == other.A);
+
+        /// <summary>
+        /// Returns a new edge with reversed direction (from B to A).
+        /// </summary>
+        public readonly Edge Reversed() => new(B, A);
     }
 }

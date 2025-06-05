@@ -185,11 +185,11 @@ namespace IsoGen.Geometry
             Point3D C = Vertices[2];
             Vector3D AB = B - A;
             Vector3D AC = C - A;
-            Vector3D normal = AB.Cross(AC).Normalize();
+            Vector3D normal = AB.Cross(AC).Normalized();
 
             // Create an orthonormal basis (u, v) on the plane
-            Vector3D u = AB.Normalize();
-            Vector3D v = normal.Cross(u)).Normalize();
+            Vector3D u = AB.Normalized();
+            Vector3D v = normal.Cross(u).Normalized();
 
             // Pair each vertex with its angle around the centroid
             var angles = new List<(Point3D point, double angle)>();
