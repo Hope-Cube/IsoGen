@@ -5,7 +5,7 @@ namespace IsoGen
 {
     internal class SvgGen
     {
-        public static void GenerateSvgPath(List<Point3D> points, bool closePath = false, double? svgWidth = null, double? svgHeight = null)
+        public static void GenerateSvgPath(string name, List<Point3D> points, bool closePath = false, double? svgWidth = null, double? svgHeight = null)
         {
             if (points == null || points.Count < 2)
                 throw new ArgumentException("Need at least two points to create a path.");
@@ -22,10 +22,10 @@ namespace IsoGen
             if (closePath)
                 sb.Append(" Z");
 
-            WriteSvgFile(sb.ToString(), viewBoxWidth, viewBoxHeight, svgWidth, svgHeight);
+            WriteSvgFile(name, sb.ToString(), viewBoxWidth, viewBoxHeight, svgWidth, svgHeight);
         }
 
-        public static void GenerateSvgPath(List<Edge> edges, bool closePath = false, double? svgWidth = null, double? svgHeight = null)
+        public static void GenerateSvgPath(string name, List<Edge> edges, bool closePath = false, double? svgWidth = null, double? svgHeight = null)
         {
             if (edges == null || edges.Count == 0)
                 throw new ArgumentException("Need at least one edge to generate a path.");
@@ -43,7 +43,7 @@ namespace IsoGen
             if (closePath)
                 sb.Append(" Z");
 
-            WriteSvgFile(sb.ToString(), viewBoxWidth, viewBoxHeight, svgWidth, svgHeight);
+            WriteSvgFile(name, sb.ToString(), viewBoxWidth, viewBoxHeight, svgWidth, svgHeight);
         }
 
         public static (double minX, double minY, double width, double height) CalculateViewBox(List<Point3D> points)
@@ -56,12 +56,12 @@ namespace IsoGen
             return (minX, minY, maxX - minX, maxY - minY);
         }
 
-        public static void WriteSvgFile(string pathData, double viewBoxWidth, double viewBoxHeight, double? svgWidth = null, double? svgHeight = null)
+        public static void WriteSvgFile(string name, string pathData, double viewBoxWidth, double viewBoxHeight, double? svgWidth = null, double? svgHeight = null)
         {
             double finalWidth = svgWidth ?? viewBoxWidth;
             double finalHeight = svgHeight ?? viewBoxHeight;
 
-            using StreamWriter writer = new("output.svg");
+            using StreamWriter writer = new($"{name}.svg");
             writer.WriteLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{finalWidth}\" height=\"{finalHeight}\" viewBox=\"0 0 {viewBoxWidth} {viewBoxHeight}\">");
             writer.WriteLine($"<path d=\"{pathData}\" stroke=\"black\" fill=\"none\" />");
             writer.WriteLine("</svg>");

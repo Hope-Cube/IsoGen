@@ -15,7 +15,7 @@ namespace IsoGen
     new(10, 100, 0)
 };
 
-            GenerateSvgPath(points, true, svgWidth: 100, svgHeight: 100);
+            GenerateSvgPath("autoscale", points, true);
 
             /*Point3D A = new(1, 0, 0);
             Point3D B = new(0, 1, 0);
