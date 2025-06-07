@@ -1,4 +1,5 @@
 ﻿using IsoGen.Geometry;
+using static IsoGen.SvgGen;
 
 namespace IsoGen
 {
@@ -6,7 +7,17 @@ namespace IsoGen
     {
         static void Main()
         {
-            Point3D A = new(1, 0, 0);
+            var points = new List<Point3D>
+{
+    new(10, 10, 0),
+    new(100, 10, 0),
+    new(100, 100, 0),
+    new(10, 100, 0)
+};
+
+            GenerateSvgPath(points, true, svgWidth: 100, svgHeight: 100);
+
+            /*Point3D A = new(1, 0, 0);
             Point3D B = new(0, 1, 0);
             Point3D C = new(1, 1, 0);
             Point3D D = new(0, 0, 0);
@@ -115,21 +126,21 @@ namespace IsoGen
             //    Console.WriteLine("3D isometric space image generated, centered, and opened.");
             //}
 
-                        //static Point ConvertToIsometric(int x, int y, int z, int tileWidth, int tileHeight, int heightFactor)
+            //static Point ConvertToIsometric(int x, int y, int z, int tileWidth, int tileHeight, int heightFactor)
             //{
             //    int screenX = (x - z) * (tileWidth / 2);
             //    int screenY = (x + z) * (tileHeight / 2) - (y * heightFactor);
             //    return new Point(screenX, screenY);
             //}
 
-                        //static PointF ConvertToIsometric(double x, double y, double z, int tileWidth, int tileHeight, int heightFactor)
+            //static PointF ConvertToIsometric(double x, double y, double z, int tileWidth, int tileHeight, int heightFactor)
             //{
             //    double screenX = (x - z) * (tileWidth / 2.0);
             //    double screenY = (x + z) * (tileHeight / 2.0) - (y * heightFactor);
             //    return new PointF((float)screenX, (float)screenY);
             //}
 
-                        //static void DrawCube(Graphics g, int x, int y, int z,
+            //static void DrawCube(Graphics g, int x, int y, int z,
             //             int tileWidth, int tileHeight, int heightFactor,
             //             int offsetX, int offsetY)
             //{
